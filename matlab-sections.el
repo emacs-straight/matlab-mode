@@ -55,7 +55,8 @@
   '((t :inherit font-lock-comment-face
        :overline t
        :height 1.25))
-  "Default face for the section separation line in matlab-sections-minor-mode."
+  "Face for \"%% code section\" headings in matlab-sections-minor-mode.
+This is the face used when demarcating code sections in MATLAB script files."
   :group 'matlab-sections)
 
 (defcustom matlab-sections-highlight-section t
@@ -115,11 +116,11 @@ followed by a description that doesn't end with \"%\"."
   :type 'face
   :group 'matlab-sections
   :set (lambda (symbol value)
-	 (set symbol value)
-	 (dolist (buffer (buffer-list))
-	   (with-current-buffer buffer
-	     (when matlab-sections-overlay
-	       (overlay-put matlab-sections-overlay 'face matlab-sections-highlight-face))))))
+         (set symbol value)
+         (dolist (buffer (buffer-list))
+           (with-current-buffer buffer
+             (when matlab-sections-overlay
+               (overlay-put matlab-sections-overlay 'face matlab-sections-highlight-face))))))
 
 (defcustom matlab-sections-sticky-flag t
   "Non-nil means the matlab-sections mode highlight appears in all windows.
@@ -129,32 +130,35 @@ the command `matlab-sections-minor-mode' to turn matlab-sections mode on."
   :type 'boolean
   :group 'matlab-sections)
 
-;; Function to obtain range of current section
+;; Function to obtain range of current code section
 
 (defun matlab-sections-range-function ()
-  "Function to call to return highlight range.
-The function of no args should return a cons section; its car value
-is the beginning position of highlight and its cdr value is the
-end position of highlight in the buffer.
-It should return nil if there's no region to be highlighted."
+  "Return range (START-PT . END-PT) of current MATLAB code section.
+nil is returned if there is no code section."
   (save-match-data
-    (let ((r-start (save-excursion
-		     (progn (end-of-line)
-			    (if (re-search-backward matlab-sections-section-break-regexp nil t)
-				(progn (goto-char (match-beginning 0))
-				       (point))
-			      (point-min)))))
-	  (r-end (save-excursion
-		   (progn (end-of-line)
-			  (if (re-search-forward matlab-sections-section-break-regexp nil t)
-			      (progn (goto-char (match-beginning 0))
-				     (point))
-			    (point-max))))))
-      (progn
-	;; (message "cp is %s start is %s; end is %s" (point) r-start r-end)
-	(if (and (eq r-start (point-min)) (eq r-end (point-max)))
-	    nil
-	  `(,r-start . ,r-end))))))
+    (let* (in-section
+           (r-start (save-excursion
+                      (save-restriction
+                        (widen)
+                        (end-of-line)
+                        (if (re-search-backward matlab-sections-section-break-regexp nil t)
+                            (progn (setq in-section t)
+                                   (goto-char (match-beginning 0))
+                                   (point))
+                          (point-min)))))
+           (r-end (save-excursion
+                    (save-restriction
+                      (widen)
+                      (end-of-line)
+                      (if (re-search-forward matlab-sections-section-break-regexp nil t)
+                          (progn (setq in-section t)
+                                 (goto-char (match-beginning 0))
+                                 (point))
+                        (point-max))))))
+      (if in-section
+          `(,r-start . ,r-end)
+        nil)
+      )))
 
 ;; Navigation
 
@@ -166,8 +170,8 @@ bunch of times."
 
   (dotimes (_ (or arg 1))
     (let ((rngc (matlab-sections-range-function))
-	  (rngp (save-excursion (matlab-sections-backward-section)
-				(matlab-sections-range-function))))
+          (rngp (save-excursion (matlab-sections-backward-section)
+                                (matlab-sections-range-function))))
       (goto-char (car rngp))
       (kill-region (car rngc) (cdr rngc))
       (yank)
@@ -182,8 +186,8 @@ Optionally a prefix argument ARG can be provided for repeating it a
 
   (dotimes (_ (or arg 1))
     (let ((rngc (matlab-sections-range-function))
-	  (rngn (save-excursion (matlab-sections-forward-section)
-				(matlab-sections-range-function))))
+          (rngn (save-excursion (matlab-sections-forward-section)
+                                (matlab-sections-range-function))))
       (goto-char (cdr rngn))
       (kill-region (car rngc) (cdr rngc))
       (yank)
@@ -359,11 +363,12 @@ You can enable / disable super \"Windows\" key bindings by customizing
 
 ;;; Enable/Disable sections mode automatically
 ;;;###autoload
-(defun matlab-sections-auto-enable-on-mfile-type-fcn (mfile-type)
+(defun matlab-sections-auto-enable-on-mfile-type-fcn (mfile-type &optional skip-noninteractive)
   "Activate or deactivate sections mode based on MFILE-TYPE.
-This is a noop if `noninteractive' is t."
+This is a noop if SKIP-NONINTERACTIVE is nil and `noninteractive' is t."
   ;; Code sections "%% description" have some cost, thus don't activate in batch mode.
-  (unless noninteractive
+  (when (or skip-noninteractive
+            (not noninteractive))
     (let ((is-enabled matlab-sections-minor-mode)
           (enable (eq mfile-type 'script)))
       (if enable
@@ -382,12 +387,12 @@ This is a noop if `noninteractive' is t."
   "Activate the matlab-sections overlay on the current line."
   (if matlab-sections-minor-mode  ; Might be changed outside the mode function.
       (progn
-	(unless matlab-sections-overlay
-	  (setq matlab-sections-overlay (make-overlay 1 1)) ; to be moved
-	  (overlay-put matlab-sections-overlay 'face matlab-sections-highlight-face))
-	(overlay-put matlab-sections-overlay
-		     'window (unless matlab-sections-sticky-flag (selected-window)))
-	(matlab-sections-move-overlay matlab-sections-overlay))
+        (unless matlab-sections-overlay
+          (setq matlab-sections-overlay (make-overlay 1 1)) ; to be moved
+          (overlay-put matlab-sections-overlay 'face matlab-sections-highlight-face))
+        (overlay-put matlab-sections-overlay
+                     'window (unless matlab-sections-sticky-flag (selected-window)))
+        (matlab-sections-move-overlay matlab-sections-overlay))
     (matlab-sections-unhighlight)))
 
 (defun matlab-sections-unhighlight ()
@@ -476,4 +481,4 @@ See `matlab-sections-help' for details on MATLAB code sections."
 
 ;; LocalWords:  Nidish Narayanaa Balaji nidbid gmail cellbreak Hisch subr defface defcustom booleanp
 ;; LocalWords:  stringp dolist defun cdr progn cp dotimes rngc rngp rngn endp begp setq Keymap cntrl
-;; LocalWords:  keymap kbd defalias Ludlam zappo prev eobp bobp buf SPC noop mfile
+;; LocalWords:  keymap kbd defalias Ludlam zappo prev eobp bobp buf SPC noop mfile classdef's
