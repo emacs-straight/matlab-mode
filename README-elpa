@@ -92,9 +92,10 @@
   Installing via [MELPA] is recommended because MELPA will contain the
   latest validated release.
 
-  Add to your `~/.emacs':
+  Add to your `~/.emacs'
 
   ┌────
+  │ (require 'package)
   │ (add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/") t)
   └────
 
