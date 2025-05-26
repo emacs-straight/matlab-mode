@@ -14,25 +14,51 @@
 
 2. *Code navigation and more*
 
-   - [[https://github.com/mathworks/MATLAB-language-server][MATLAB Language Server]], matlabls, for code navigation, code completion, go to definition, find
-     references, and more. See [[file:doc/matlab-language-server-lsp-mode.org][doc/matlab-language-server-lsp-mode.org]].
+   - The [[https://github.com/mathworks/MATLAB-language-server][MATLAB Language Server]], matlabls, for code navigation, code completion, go to definition,
+     find references, and more. matlabls is a separate special MATLAB process that Emacs
+     communicates with. For example, when you ask Emacs to jump to the definition of a function via
+     =M-.= or =M-x xref-find-definitions=, Emacs will ask the matlabls process where the function is
+     located and use it's response to jump to the definition.
+
+     #+begin_example
+       +-----------+            +------------+
+       |           |            |            |
+       |   Emacs   |<==========>|  matlabls  |
+       |           |            |            |
+       +-----------+            +------------+
+     #+end_example
+
+     You need to install and setup the MATLAB Language Server to use it.
+     See [[file:doc/matlab-language-server-lsp-mode.org][doc/matlab-language-server-lsp-mode.org]].
 
    - Imenu support for quickly jumping to function declarations in the current ~*.m~ file.
      See [[file:doc/matlab-imenu.org][doc/matlab-imenu.org]].
 
-3. *M-x matlab-shell* for running and debugging MATLAB within Emacs (Unix-only).
+3. *M-x matlab-shell* for running and debugging MATLAB within Emacs (Unix only).
 
    - MATLAB command window errors are hyper-linked and files open in Emacs
    - Debugging support is available from the MATLAB menu.
    - matlab-shell uses company-mode for completions.
-   - You can use Emacs TRAMP and =M-x matlab-shell= to run remote MATLAB within your local Emacs
-     session, see [[file:doc/remote-matlab-shell.org][doc/remote-matlab-shell.org]].
 
-4. *M-x matlab-netshell* for running MATLAB code on Microsoft Windows within Emacs using an attached
+   See [[file:doc/matlab-shell-for-unix.org][doc/matlab-shell-for-unix.org]]
+
+4. *M-x matlab-shell* to run remote Unix MATLAB within your local Emacs session.
+
+   #+begin_example
+     +----------------+                 +-----------------+
+     | Local Computer |                 | Remote Computer |
+     |                |<===============>|                 |
+     |     Emacs      |      ssh        |      MATLAB     |
+     +----------------+                 +-----------------+
+   #+end_example
+
+   You use Emacs on your local computer to edit files on the remote computer, run and debug remote
+   MATLAB in a matlab-shell in your local Emacs.  See [[file:doc/remote-matlab-shell.org][doc/remote-matlab-shell.org]].
+
+5. *M-x matlab-netshell* for running MATLAB code on Microsoft Windows within Emacs using an attached
    MATLAB.
 
    #+begin_example
-
     +--------------- Emacs ----------------+         +------------  MATLAB  ------------+
     |                                      |         |                                  |
     | (1) M-x matlab-netshell-server-start |         | (2) connect to Emacs             |
@@ -41,25 +67,16 @@
     |     "MATLAB -> Code Sections" menu   |         | >>                               |
     |     or the key bindings              |         |                                  |
     +--------------------------------------+         +----------------------------------+
-
    #+end_example
-   
-5. *Code sections* support for MATLAB script files. Script files contain one or more commands, such
-   as variable assignements, function calls, etc.  Script files differ from declaration files such
-   as those declaring function's or classdef's.  You typically focus your efforts on a single part
-   of your code at a time, working with the code and related text in sections.  You demarcate
-   sections using /"%% description"/ header comments.
 
-   - After visiting a MATLAB script, you have the *"MATLAB -> Code Sections"* menu and key
-     bindings which lets you can navigate, run, and move code sections.
+6. *Code sections* support for MATLAB script files. See [[file:doc/matlab-code-sections.org][doc/matlab-code-sections.org]].
+
+   - After visiting a MATLAB script, you have a *"MATLAB -> Code Sections"* menu and key bindings
+     which lets you navigate, run, and move code sections.
 
    - Try out code sections using: [[file:examples/matlab-sections/tryout_matlabsection.m][./examples/matlab-sections/tryout_matlabsection.m]].
 
-   - The default keybindings for code sections are ~C-c C-<KEY>~ and ~C-c M-<KEY>~. You can add
-     super key bindings for code sections. After visiting a file.m, see menu *"MATLAB -> Code
-     Sections -> Help"*.
-
-6. *Creation of scientific papers, theses, and documents* using MATLAB and [[http://orgmode.org]].
+7. *Creation of scientific papers, theses, and documents* using MATLAB and [[http://orgmode.org]].
 
    - Org enables [[https://en.wikipedia.org/wiki/Literate_programming][literate programming]] which directly supports reproducible research by allowing
      scientists and engineers to write code along with detailed explanations in natural language.
@@ -74,7 +91,7 @@
    - See [[file:examples/matlab-and-org-mode][./examples/matlab-and-org-mode/]] to get started. This directory contains a [[file:examples/matlab-and-org-mode/matlab-and-org-mode.pdf][PDF]] generated from
      [[file:examples/matlab-and-org-mode/matlab-and-org-mode.org][./examples/matlab-and-org-mode/matlab-and-org-mode.org]].
 
-7. *tlc-mode* for editing ~*.tlc~ files. The Target Language Compiler (TLC) is part of Simulink®
+8. *tlc-mode* for editing ~*.tlc~ files. The Target Language Compiler (TLC) is part of Simulink®
    Coder™.
 
 * Installation
@@ -135,56 +152,9 @@ GPL3, https://www.gnu.org/licenses/gpl-3.0.en.html (see [[file:License.txt][Lice
 
 * FAQ
 
-** How do I customize matlab-mode?
+See [[file:doc/faq.org][doc/faq.org]]
 
-You can configure matlab-emacs using the "matlab" or "matlab-shell" customization groups:
-
-: Emacs -> Options -> Customize Emacs -> Specific Group
-
-** How do I customize "edit file.m" behavior?
-
-By default when you run
-
- #+begin_example
- M-x matlab-shell
-
- >> edit file.m
- #+end_example
-
-file.m will open in emacs using 'emacsclient -n'. matlab-shell achieve this behavior by instructing
-MATLAB to use 'emacsclient -n' as the external text editor.
-
-You can customize this by setting `matlab-shell-emacsclient-command' in the matlab-shell
-customization group. You can change this command to what's appropriate. If you set it to the empty
-string, 'edit file.m' will use the default MATLAB editor setting.
-
-The default MATLAB editor setting is controlled in the MATLAB preferences, (e.g. R2018a Home tab,
-Environment section, Preferences) where you can select which editor you want to edit a text
-file. MATLAB Editor or an external text editor. If you always want to use Emacs as your matlab
-editor even when running MATLAB outside of emacs, select Text editor and set it to the appropriate
-'emacsclient -n' command.
-
-** The code-sections are not highlighted properly. What do I do?
-
-There can be several reasons for this. One reason would be if you are
-using syntax highlighting from a different package (such as
-tree-sitter) which is over-riding the font-lock provided by
-matlab-mode.
-
-In this case, add the following hook to your config:
-#+begin_src emacs-lisp
-  (add-hook 'matlab-sections-mode-hook
-  	  (lambda () (interactive)
-              (font-lock-add-keywords
-  	     nil
-  	     `((,matlab-sections-section-break-regexp
-                  1 'matlab-sections-section-break-face prepend)))
-              (font-lock-flush)))
-#+end_src
-Ensure that this is included after matlab-mode as well as your syntax
-highlighter are initialized in your config.
-
-** Mailing list?
+* Mailing list
 
 https://sourceforge.net/projects/matlab-emacs/
 
