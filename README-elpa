@@ -13,27 +13,12 @@
 
   2. *Code navigation and more*
 
-     • The [MATLAB Language Server], matlabls, for code navigation, code
-       completion, go to definition, find references, and more. matlabls
-       is a separate special MATLAB process that Emacs communicates
-       with. For example, when you ask Emacs to jump to the definition
-       of a function via `M-.' or `M-x xref-find-definitions', Emacs
-       will ask the matlabls process where the function is located and
-       use it's response to jump to the definition.
-
-       ┌────
-       │ +-----------+            +------------+
-       │ |           |            |            |
-       │ |   Emacs   |<==========>|  matlabls  |
-       │ |           |            |            |
-       │ +-----------+            +------------+
-       └────
-
-       You need to install and setup the MATLAB Language Server to use
-       it.  See [doc/matlab-language-server-lsp-mode.org].
+     • The [MATLAB Language Server with Emacs], matlabls, provides code
+       navigation, code completion, go to definition, find references,
+       and more.
 
      • Imenu support for quickly jumping to function declarations in the
-       current `*.m' file.  See [doc/matlab-imenu.org].
+       current `*.m' or `*.tlc' file.  See [doc/matlab-imenu.org].
 
   3. *M-x matlab-shell* for running and debugging MATLAB within Emacs
       (Unix only).
@@ -111,10 +96,7 @@
 
 [GNU Emacs] <https://www.gnu.org/software/emacs/>
 
-[MATLAB Language Server]
-<https://github.com/mathworks/MATLAB-language-server>
-
-[doc/matlab-language-server-lsp-mode.org]
+[MATLAB Language Server with Emacs]
 <file:doc/matlab-language-server-lsp-mode.org>
 
 [doc/matlab-imenu.org] <file:doc/matlab-imenu.org>
