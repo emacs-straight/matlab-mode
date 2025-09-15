@@ -1,15 +1,15 @@
-% Copyright 2019-2025 Free Software Foundation, Inc.
-
+% Copyright (C) 2019-2025 Free Software Foundation, Inc.
+%
 % This program is free software: you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
 % the Free Software Foundation, either version 3 of the License, or
 % (at your option) any later version.
-
+%
 % This program is distributed in the hope that it will be useful,
 % but WITHOUT ANY WARRANTY; without even the implied warranty of
 % MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 % GNU General Public License for more details.
-
+%
 % You should have received a copy of the GNU General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -64,10 +64,10 @@ function emacsinit()
         % debugging.
 
         % Disable built-in editor showing up for debugging
-        com.mathworks.services.Prefs.setBooleanPref('EditorGraphicalDebugging', false);
+        com.mathworks.services.Prefs.setBooleanPref('EditorGraphicalDebugging', false); %#ok
 
         % Disable wrapping of text lines.  Emacs will wrap or not based on user preference.
-        com.mathworks.services.Prefs.setBooleanPref('WrapLines',false)
+        com.mathworks.services.Prefs.setBooleanPref('WrapLines', false); %#ok
     end
 
     % Check if we're running inside emacs.  If we are NOT, then force the enablement of

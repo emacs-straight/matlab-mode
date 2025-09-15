@@ -1,8 +1,8 @@
 ;;; matlab-syntax.el --- Manage MATLAB syntax tables and buffer parsing -*- lexical-binding: t -*-
 
-;; Copyright (C) 2024-2025 Free Software Foundation, Inc.
-
 ;; Author:  <eludlam@mathworks.com>, <john.ciolfi.32@gmail.com>
+
+;; Copyright (C) 2021-2025 Free Software Foundation, Inc.
 ;;
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License as
@@ -15,7 +15,7 @@
 ;; General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with this program.  If not, see https://www.gnu.org/licenses/.
+;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;;
@@ -585,6 +585,6 @@ If COUNT is negative, travel backward."
 
 ;;; matlab-syntax.el ends here
 
-;; LocalWords:  Ludlam eludlam compat booleanp propertize varname defmacro oldsyntax progn
+;; LocalWords:  Ludlam eludlam compat booleanp propertize varname defmacro oldsyntax progn defface
 ;; LocalWords:  ppss sexp pps defun eobp mcm blockcomment EOL defconst commanddual cds bolp eol
-;; LocalWords:  cellbreak setq defsubst charvector memq sexps posn parens boundp gmail
+;; LocalWords:  cellbreak setq defsubst charvector memq sexps posn parens boundp gmail classdef's

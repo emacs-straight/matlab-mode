@@ -1,25 +1,25 @@
 ;;; matlab-netshell.el --- Control MATLAB from a network port. -*- lexical-binding: t -*-
 
-;; Copyright (C) 2024 Free Software Foundation, Inc.
-
 ;; Author: Eric Ludlam <zappo@gnu.org>
+
+;; Copyright (C) 2024 Free Software Foundation, Inc.
 ;;
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License as
 ;; published by the Free Software Foundation, either version 3 of the
 ;; License, or (at your option) any later version.
-
+;;
 ;; This program is distributed in the hope that it will be useful, but
 ;; WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 ;; General Public License for more details.
-
+;;
 ;; You should have received a copy of the GNU General Public License
-;; along with this program.  If not, see https://www.gnu.org/licenses/.
+;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;;
-;; Form a back-channale for Emacs to chat with a running MATLAB.
+;; Form a back-channel for Emacs to chat with a running MATLAB.
 ;; Allows you to edit for and with a MATLAB sessions, even if it is not in a
 ;; matlab-shell buffer.
 
@@ -122,7 +122,7 @@ response from some Emacs based request."
   ;; Interpret the command.
   (cond ((string= "init" cmd)
 	 ;; Make sure GUD bindings are available, but do so in
-	 ;; the netshell buffer so when mlgud bundings run, they
+	 ;; the netshell buffer so when mlgud bindings run, they
 	 ;; don't stomp on C-c matlab-mode bindings.
 	 (with-current-buffer (process-buffer proc)
 	   (matlab-shell-mode-gud-enable-bindings))
@@ -135,12 +135,12 @@ response from some Emacs based request."
 	 (message "MATLAB connection initialized.")
 	 )
 	((string= "ack" cmd)
-	 (message "Ack recieved.  Send ACK back.")
+	 (message "Ack received.  Send ACK back.")
 	 (matlab-netshell-send "nowledge" ""))
 	((string= "nowledge" cmd)
-	 (message "Acknowledgement recieved."))
+	 (message "Acknowledgement received."))
 	((string= "output" cmd)
-	 (message "Ouput: %S" data))
+	 (message "Output: %S" data))
 	((string= "error" cmd)
 	 (message "MATLAB Error: %s" data))
 	((string= "eval" cmd)
@@ -164,7 +164,7 @@ PROC is the TCP stream which generated MSG."
   
 	((string= msg "connection broken by remote peer\n")
 	 (setq matlab-netshell-clients (delq proc matlab-netshell-clients))
-	 (message (format "MATLAB has dropped its connecction")))
+	 (message (format "MATLAB has dropped its connection")))
 
 	(t
 	 (message "Unhandled event."))))
@@ -206,3 +206,6 @@ PROC is the TCP stream which generated MSG."
 (provide 'matlab-netshell)
 
 ;;; matlab-netshell.el ends here
+
+;; LocalWords:  Ludlam zappo emacsclient gud defun ipv setq dolist cmdstr mlgud ecc ecca clientcmd
+;; LocalWords:  nowledge newbuff delq mcode MCode

@@ -6,10 +6,14 @@
 
   [MathWorks] MATLAB® and [GNU Emacs] integration:
 
-  1. *matlab-mode* for editing `*.m' files.
+  1. MATLAB mode, *matlab-ts-mode* or *matlab-mode*, for editing `*.m'
+     files.
 
      • Edit MATLAB code with syntax highlighting and smart indentation.
      • Lint MATLAB code with fix-it's using the MATLAB Code Analyzer.
+
+     The *matlab-ts-mode* is a more capable, performant, and accurate
+     than *matlab-mode*.
 
   2. *Code navigation and more*
 
@@ -124,58 +128,76 @@
 2 Installation
 ══════════════
 
-2.1 Install via ELPA or MELPA
-─────────────────────────────
+  1. Install the MATLAB package via [MELPA] or [ELPA]. MELPA contains
+     the latest version.  To install from MELPA, add to your `~/.emacs'
 
-  Install via [ELPA] or [MELPA]. MELPA contains the latest. To install
-  from MELPA, add to your `~/.emacs'
+     ┌────
+     │ (require 'package)
+     │ (add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/") t)
+     └────
 
-  ┌────
-  │ (require 'package)
-  │ (add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/") t)
-  └────
+     Restart Emacs and then
 
-  To install from either ELPA or MELPA
-
-  ┌────
-  │ M-x RET list-packages RET
-  └────
+     ┌────
+     │ M-x package-install RET matlab-mode RET
+     └────
 
 
-  and click on matlab-mode to install.
+     Note: to all available packages, `M-x RET list-packages RET'
 
+  2. [Optional] Install the `company' package which is used for TAB
+     completions.
 
-[ELPA] <https://elpa.gnu.org/>
+     ┌────
+     │ M-x package-install RET company RET
+     └────
+
+  3. [Optional] Install MATLAB tree-sitter for matlab-ts-mode, which
+     provides improved editing capabilities and improved performance.
+
+     The MATLAB tree-sitter leverages [Tree-sitter] to create a parse
+     tree for MATLAB code.  The parse tree is updated incrementally and
+     is robust to syntax errors. It is highly performant and achieves
+     this by being implemented in C to create a shared object that is
+     loaded into the Emacs process.  *matlab-ts-mode* leverages the
+     MATLAB tree-sitter to give an improved MATLAB editing experience
+     when compared with matlab-mode.
+
+     See [doc/install-matlab-tree-sitter-grammar.org]
+
+  4. [Optional] Install lsp-mode and the [MATLAB Language Server] for an
+     improved editing experience.
+
+  5. [Optional] Check your installation setup.
+
+     If you are using *matlab-ts-mode*, visit a `*.m' MATLAB file and
+     select the menu item:
+
+     ┌────
+     │ MATLAB -> Check setup
+     └────
+
 
 [MELPA] <https://melpa.org>
 
+[ELPA] <https://elpa.gnu.org/>
 
-2.2 Install from this repository
+[Tree-sitter] <https://tree-sitter.github.io/tree-sitter/>
+
+[doc/install-matlab-tree-sitter-grammar.org]
+<file:doc/install-matlab-tree-sitter-grammar.org>
+
+[MATLAB Language Server] <file:doc/matlab-language-server-lsp-mode.org>
+
+2.1 Install from this repository
 ────────────────────────────────
 
-  Build:
+  If you are contributing to the Emacs MATLAB Mode package, see
+  [contributing/install-emacs-matlab-from-git.org]
 
-  ┌────
-  │ cd /path/to/Emacs-MATLAB-mode
-  │ 
-  │ # Build lisp and run tests (requires MATLAB executable):
-  │ make
-  │ 
-  │ # Alternatively, build lisp and run tests using a specific MATLAB executable:
-  │ make MATLAB_EXE=/path/to/matlab
-  │ 
-  │ # If desired, you can separate the building of lisp and running tests using:
-  │ make lisp
-  │ make tests
-  │ make tests MATLAB_EXE=/path/to/matlab # if using a specific MATLAB executable
-  └────
 
-  Add the following to your `~/.emacs' file:
-
-  ┌────
-  │ (add-to-list 'load-path "/path/to/Emacs-MATLAB-mode")
-  │ (load-library "matlab-autoload")
-  └────
+[contributing/install-emacs-matlab-from-git.org]
+<file:contributing/install-emacs-matlab-from-git.org>
 
 
 3 MathWorks Products ([https://www.mathworks.com])
@@ -219,6 +241,8 @@
 
 7 Mailing list
 ══════════════
+
+  <mailto:matlab-emacs-discuss@lists.sourceforge.net>
 
   <https://sourceforge.net/projects/matlab-emacs/>
 

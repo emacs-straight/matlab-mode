@@ -1,21 +1,22 @@
 ;;; matlab-topic.el --- Help browsing via Emacs buffers -*- lexical-binding: t -*-
 
-;; Copyright (C) 2024 Free Software Foundation, Inc.
 
 ;; Author: Eric Ludlam <zappo@gnu.org>
+
+;; Copyright (C) 2019-2024 Free Software Foundation, Inc.
 ;;
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License as
 ;; published by the Free Software Foundation, either version 3 of the
 ;; License, or (at your option) any later version.
-
+;;
 ;; This program is distributed in the hope that it will be useful, but
 ;; WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 ;; General Public License for more details.
-
+;;
 ;; You should have received a copy of the GNU General Public License
-;; along with this program.  If not, see https://www.gnu.org/licenses/.
+;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;;
@@ -24,6 +25,7 @@
 
 ;;; Code:
 (require 'matlab)
+(require 'matlab--shared)
 (require 'matlab-shell)
 (require 'view)
 
@@ -71,7 +73,7 @@
   (let ((km (make-sparse-keymap)))
     (define-key km [return] 'matlab-shell-help-choose)
     (define-key km "q" 'bury-buffer)
-    (define-key km [(control h) (control m)] matlab-help-map)
+    (define-key km [(control h) (control m)] matlab--shell-help-map)
     (if (string-match "XEmacs" emacs-version)
 	(define-key km [button2] 'matlab-shell-help-click)
       (define-key km [mouse-2] 'matlab-shell-help-click)
@@ -93,7 +95,7 @@
    "----"
    ["Exit" bury-buffer t]))
 
-;; Need this to fix wierd problem in define-derived-mode
+;; Need this to fix weird problem in define-derived-mode
 (defvar matlab-shell-help-mode-syntax-table (make-syntax-table)
   "Syntax table used in `matlab-shell-help-mode'.")
 
@@ -201,3 +203,5 @@ EVENT is the user mouse event."
 (provide 'matlab-topic)
 
 ;;; matlab-topic.el ends here
+
+;; LocalWords:  Ludlam zappo fboundp defalias keymap setq boundp defun downcase cdr numberp

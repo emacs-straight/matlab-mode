@@ -1,21 +1,21 @@
 ;;; matlab-scan.el --- Tools for contextually scanning a MATLAB buffer -*- lexical-binding: t -*-
 
-;; Copyright (C) 2021-2025 Free Software Foundation, Inc.
-
 ;; Author: eludlam@mathworks.com, john.ciolfi.32@gmail.com
+
+;; Copyright (C) 2021-2025 Free Software Foundation, Inc.
 ;;
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License as
 ;; published by the Free Software Foundation, either version 3 of the
 ;; License, or (at your option) any later version.
-
+;;
 ;; This program is distributed in the hope that it will be useful, but
 ;; WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 ;; General Public License for more details.
-
+;;
 ;; You should have received a copy of the GNU General Public License
-;; along with this program.  If not, see https://www.gnu.org/licenses/.
+;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;;
@@ -1522,7 +1522,7 @@ If optional NODISP, then don't display, just return the msg."
 (provide 'matlab-scan)
 ;;; matlab-scan.el ends here
 
-;; LocalWords:  eludlam defconst decl ifelse vardecl obarray mapc elt cdr defun numberp Ludlam
+;; LocalWords:  eludlam defconst decl ifelse vardecl obarray mapc elt cdr defun numberp Ludlam gmail
 ;; LocalWords:  defsubst kwt setq symbolp memq ctxt ppss mlf ltype stype propertize BOL sexp bol
 ;; LocalWords:  ppsbol pps progn repeat:nil ppsend eol ec prev symval eolp commanddual defmacro
 ;; LocalWords:  consp endpt parens tmp bobp setcdr nthcdr setcar nonemptymiss codemiss cmdbegin

@@ -1,25 +1,21 @@
 ;;; semantic-matlab.el --- Semantic details for MATLAB files -*- lexical-binding: t -*-
 
-;; Copyright (C) 2024 Free Software Foundation, Inc.
-
 ;; Author: Eric M. Ludlam <eludlam@mathworks.com>
 
-;; This file is not part of GNU Emacs.
-
-;; This is free software; you can redistribute it and/or modify
-;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation; either version 3, or (at your option)
-;; any later version.
-
-;; This software is distributed in the hope that it will be useful,
-;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-;; GNU General Public License for more details.
-
+;; Copyright (C) 2008-2024 Free Software Foundation, Inc.
+;;
+;; This program is free software; you can redistribute it and/or
+;; modify it under the terms of the GNU General Public License as
+;; published by the Free Software Foundation, either version 3 of the
+;; License, or (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful, but
+;; WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+;; General Public License for more details.
+;;
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs; see the file COPYING.  If not, write to the
-;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
-;; Boston, MA 02110-1301, USA.
+;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;;
@@ -42,6 +38,7 @@
   )
 (require 'matlab)
 (require 'matlab-shell)
+(require 'matlab--access)
 (require 'semanticdb-matlab)
 
 ;;; Code:
@@ -84,7 +81,7 @@ If `semantic-mode' is not enabled, do something hacky to make it work."
 These paths will be parsed recursively by semantic.  Class and
 private directories will be omitted here.")
 
-(defvar semantic-matlab-root-directory (matlab-mode-determine-matlabroot)
+(defvar semantic-matlab-root-directory (matlab--get-matlabroot)
   "Root directory of MATLAB installation.
 Use `semantic-matlab-system-paths-include' to let semantic know
 which system directories you would like to include when doing
@@ -870,4 +867,4 @@ This will include a list of type/field names when applicable."
 ;; LocalWords:  repeat:nil RETURNVARS fn vals func's downcase oldstyle dolist nthcdr typemodifiers
 ;; LocalWords:  mapcar alist nconc bt ctags reparse chil newlist astruct aclass exampleclass anumber
 ;; LocalWords:  anotherclass avariable defconst progn bobp setcdr knowntypes cadr argstr docstring
-;; LocalWords:  defcustom ia tt fboundp nolog ctxt ENDSYM endsym imenu bucketize stickyfunc
+;; LocalWords:  defcustom ia tt fboundp nolog ctxt ENDSYM endsym imenu bucketize stickyfunc mapc

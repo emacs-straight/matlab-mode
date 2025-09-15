@@ -1,8 +1,6 @@
 ;;; matlab-mode.el --- Major mode for MATLAB(R) dot-m files -*- lexical-binding: t -*-
 
-;; Copyright (C) 2024 Free Software Foundation, Inc.
-
-;; Version: 6.3
+;; Version: 7.0.1
 ;; URL: https://github.com/mathworks/Emacs-MATLAB-Mode
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -13,6 +11,8 @@
 ;; Keywords: MATLAB(R)
 ;; Package-Requires: ((emacs "27.2"))
 
+;; Copyright (C) 1991-2025 Free Software Foundation, Inc.
+;;
 ;; This file is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published
 ;; by the Free Software Foundation, either version 3 of the License,
@@ -56,3 +56,5 @@
 (provide 'matlab-mode)
 
 ;;; matlab-mode.el ends here
+
+;; LocalWords:  SPDX Wette mwette edu Ludlam eludlam Uwe Brauer oub ucm gmail defconst

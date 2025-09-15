@@ -1,21 +1,21 @@
 ;;; matlab-shell.el --- Run MATLAB in an inferior process -*- lexical-binding: t -*-
 
-;; Copyright (C) 2019-2025 Free Software Foundation, Inc.
-
 ;; Author: Eric Ludlam <zappo@gnu.org>
+
+;; Copyright (C) 2019-2025 Free Software Foundation, Inc.
 ;;
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License as
 ;; published by the Free Software Foundation, either version 3 of the
 ;; License, or (at your option) any later version.
-
+;;
 ;; This program is distributed in the hope that it will be useful, but
 ;; WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 ;; General Public License for more details.
-
+;;
 ;; You should have received a copy of the GNU General Public License
-;; along with this program.  If not, see https://www.gnu.org/licenses/.
+;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;;
@@ -25,8 +25,20 @@
 ;;
 
 ;;; Code:
-(require 'matlab)
+
+(require 'subr-x)
+
 (require 'matlab-compat)
+(eval-and-compile
+  (require 'matlab--access))
+(require 'matlab--shell-bridge)
+(require 'matlab--shared)
+
+;; Note this should *NOT*
+;;   (require 'matlab) ;; or (require 'matlab-mode)
+;; or
+;;   (require 'matlab-ts-mode)
+;; because it is designed to work with both `matlab-mode' and `matlab-ts-mode'
 
 (require 'comint)
 (require 'server)
@@ -54,27 +66,10 @@
 
 ;;
 ;; Shell Startup
+;;
 (defcustom matlab-shell-mode-hook nil
   "List of functions to call on entry to MATLAB shell mode."
   :type 'hook)
-
-(defvar matlab-shell--default-command
-  '((gnu/linux  . "/usr/local/MATLAB/R*/bin/matlab")
-    (darwin     . "/Applications/MATLAB_R*.app/bin/matlab")
-    (windows-nt . "C:/Program Files/MATLAB/R*/bin/matlab.exe"))
-  "Standard MATLAB command installation locations, SYSTEM => GLOB.")
-
-(defcustom matlab-shell-command "matlab"
-  "The MATLAB command executable used to start MATLAB.
-This can be:
- - the name of the MATLAB command (e.g. \"matlab\") which is
-   found on the system PATH.
- - an absolute path to the matlab executable.  For example,
-   \"/<path-to-MATLAB-install-dir>/bin/matlab\"
-If matlab-shell-command is set to \"matlab\" and \"matlab\" is not
-on the system PATH, `matlab-shell' will look for the matlab
-command executable in the default MATLAB installation locations."
-  :type 'string)
 
 (defcustom matlab-shell-command-switches '("-nodesktop")
   "Command line parameters run with `matlab-shell-command'.
@@ -116,7 +111,7 @@ that ends in 2 or more %%, added to automatic commands."
 ;;
 ;; Edit from MATLAB
 (defcustom matlab-shell-emacsclient-command
-  (matlab-find-emacsclient)
+  (matlab--find-emacsclient)
   "The command to use as an external editor for MATLAB.
 Using emacsclient allows the currently running Emacs to also be the
 external editor for MATLAB.  Setting this to the empty string
@@ -171,12 +166,21 @@ narrow completions, you may find the responses slow and if so,
 you can try turning this off."
   :type 'boolean)
 
+(defcustom matlab-change-current-directory nil
+  "*If non nil, make file's directory the current directory before evaluation.
+When visiting *.m files, there's several functions that you can use to
+evaluate MATLAB code.  When this is t, before evaluation the change the
+current directory in `matlab-shell' to the file's directory."
+  :type 'boolean)
+
+(make-variable-buffer-local 'matlab-change-current-directory)
+
 (defvar matlab-shell-tab-company-available (if (locate-library "company") t nil)
   "Non-nil if we have `company' installed.
 Use this to override initial check.")
 
 (defvar matlab-shell-errorscanning-syntax-table
-  (let ((st (copy-syntax-table matlab-mode-syntax-table)))
+  (let ((st (copy-syntax-table (matlab--shell-get-syntax-table))))
     ;; Make \n be whitespace when scanning output.
     (modify-syntax-entry ?\n  " " st)
     st)
@@ -202,8 +206,9 @@ If multiple prompts are seen together, only call this once.")
 
 ;;; Font Lock
 ;;
-;; Extra font lock keywords for the MATLAB shell.
-(defconst matlab-shell-font-lock-keywords
+;; Font lock keywords for the MATLAB shell.
+
+(defconst matlab-shell-error-font-lock-keywords
   (list
    ;; How about Errors?
    '("^\\(Error in\\|Syntax error in\\)\\s-+==>\\s-+\\(.+\\)$"
@@ -213,13 +218,7 @@ If multiple prompts are seen together, only call this once.")
    ;; User beep things
    '("\\(\\?\\?\\?[^\n]+\\)" 1 font-lock-comment-face)
    )
-  "Additional keywords used by MATLAB when reporting errors in interactive\
-mode.")
-
-(defconst matlab-shell-font-lock-keywords-1
-  (append matlab-basic-font-lock-keywords
-          matlab-shell-font-lock-keywords)
-  "Keyword symbol used for basic font-lock for MATLAB shell.")
+  "The matlab-shell error keywords.")
 
 (defconst matlab-shell-object-output-font-lock-keywords
   (list
@@ -254,123 +253,12 @@ mode.")
       (1 font-lock-variable-name-face)))
    '("[[{]\\([0-9]+\\(?:x[0-9]+\\)+ \\w+\\)[]}]" (1 font-lock-comment-face))
    )
-  "Highlight various extra outputs that are typical for MATLAB.")
+  "The matlab-shell output related keywords.")
 
-(defconst matlab-shell-font-lock-keywords-2
-  (append matlab-shell-font-lock-keywords-1
-          matlab-function-font-lock-keywords
+(defconst matlab-shell-font-lock-keywords
+  (append matlab-shell-error-font-lock-keywords
           matlab-shell-object-output-font-lock-keywords)
-  "Keyword symbol used for gaudy font-lock for MATLAB shell.")
-
-(defconst matlab-shell-font-lock-keywords-3
-  (append matlab-shell-font-lock-keywords-2
-          matlab-really-gaudy-font-lock-keywords)
-  "Keyword symbol used for really gaudy font-lock for MATLAB shell.")
-
-(defun matlab-shell--matlab-not-found (no-help-window &optional default-loc)
-  "Signal error, MATLAB command not on system PATH or in optional DEFAULT-LOC.
-If NO-HELP-WINDOW is t, do not show the help window"
-  (let ((msg (format "Unable to locate \"%s\" on the system PATH%s"
-                     matlab-shell-command
-                     (if default-loc
-                         (format " or in the default installation location, %s"
-                                 default-loc)
-                       ""))))
-    (when (not no-help-window)
-      (let ((help-buf-name "*matlab-shell-help*"))
-        (with-current-buffer (get-buffer-create help-buf-name)
-          (with-help-window help-buf-name
-            (insert msg "
-
-To fix, update your system PATH to include
-  \"/<path-to-MATLAB-install>/bin\"
-To verify matlab is on your path, run \"matlab -h\" in a terminal.
-
-Alternatively, you can provide the full path to the
-MATLAB command executable by customizing option
-`matlab-shell-command'\n")))))
-
-    (user-error "%s" msg)))
-
-(cl-defun matlab-shell--abs-matlab-exe (&optional no-error)
-  "Absolute path to the MATLAB command executable.
-When `matlab-shell-command' is an absolute path, then this will
-be resolved to its true name.  Otherwise, `matlab-shell-command'
-is found using `executable-find'.  If `matlab-shell-command' is
-\"matlab\" and not the system PATH, this will return the latest
-MATLAB installed command found using
-`matlab-shell--default-command'.
-
-If NO-ERROR is t, and matlab command is not found, nil is return,
-otherwise an error is signaled."
-  (condition-case err
-      (let (abs-matlab-exe)
-        (cond
-
-         ;;Case: the path to the matlab executable was provided, validate it exists and
-         ;;      return it.
-         ((file-name-absolute-p matlab-shell-command)
-          (when (not (file-exists-p matlab-shell-command))
-            (user-error "Invalid setting for `matlab-shell-command', %s does not exist"
-                        matlab-shell-command))
-          (when (not (file-executable-p matlab-shell-command))
-            (user-error "Invalid setting for `matlab-shell-command', %s is not executable"
-                        matlab-shell-command))
-          ;; Use the path provided. Consider the case where a launcher script is provided and the
-          ;; launcher script is symlink'd. In this case, we shouldn't resolve the symlinks, i.e.
-          ;; using file-truename would break this case.
-          (setq abs-matlab-exe matlab-shell-command))
-
-         ;; Case: set to a relative path
-         ;;
-         ((when (file-name-directory matlab-shell-command)
-            (user-error "Relative paths are not supported for `matlab-shell-command', %s"
-                        matlab-shell-command)))
-
-         ;; Case: "matlab" (or something similar), locate it on the executable path
-         ;;       else locate in standard install locations.
-         (t
-          (let ((remote (file-remote-p default-directory)))
-            (if remote
-                (if (setq abs-matlab-exe (executable-find matlab-shell-command t))
-                    (setq abs-matlab-exe (concat remote abs-matlab-exe))
-                  (user-error "Unable to locate matlab executable on %s
-See https://github.com/mathworks/Emacs-MATLAB-Mode/doc/remote-matlab-emacs.org for tips" remote))
-            ;; else look local
-            (setq abs-matlab-exe (executable-find matlab-shell-command))
-            (when (not abs-matlab-exe)
-              (if (string= matlab-shell-command "matlab")
-                  ;; Get latest matlab command exe from the default installation location.
-                  (let* ((default-loc (cdr (assoc system-type matlab-shell--default-command)))
-                         (default-matlab (when default-loc
-                                           (car (last (sort
-                                                       (file-expand-wildcards default-loc)
-                                                       #'string<))))))
-                    (when (not default-matlab)
-                      (matlab-shell--matlab-not-found no-error default-loc))
-                    (when (not (file-executable-p default-matlab))
-                      (user-error "%s is not executable" default-matlab))
-                    (setq abs-matlab-exe default-matlab))
-                ;; else unable to locate it
-                (matlab-shell--matlab-not-found no-error)))))))
-
-        ;; Return existing absolute path to the MATLAB command executable
-        abs-matlab-exe)
-    (error (when (not no-error) (error "%s" (error-message-string err))))))
-
-;;; ROOT: matlabroot
-;;
-;;;###autoload
-(defun matlab-mode-determine-matlabroot ()
-  "Return the MATLABROOT for the `matlab-shell-command'.
-The MATLABROOT does not have a trailing slash.
-Returns nil if unable to determine the MATLABROOT."
-  ;; strip "/bin/matlab" from /path/to/matlabroot/bin/matlab
-  (let ((abs-matlab-exe (matlab-shell--abs-matlab-exe 'no-error)))
-    (when abs-matlab-exe
-      (let ((bin-dir (directory-file-name (file-name-directory abs-matlab-exe))))
-        ;; matlabroot no slash
-        (directory-file-name (file-name-directory bin-dir))))))
+  "The matlab-shell keywords.")
     
 
 ;;; Keymaps & Menus
@@ -390,7 +278,7 @@ Returns nil if unable to determine the MATLABROOT."
     (define-key km [(control c) (control c)] #'matlab-shell-interrupt-subjob)
 
     ;; Help system
-    (define-key km [(control h) (control m)] matlab-help-map)
+    (define-key km [(control h) (control m)] matlab--shell-help-map)
 
     ;; Completion
     (define-key km (kbd "TAB") #'matlab-shell-tab)
@@ -459,29 +347,9 @@ These will differ when MATLAB code changes directory without notifying Emacs."]
 
 This mode will allow standard Emacs shell commands/completion to occur
 with MATLAB running as an inferior process.  Additionally, this shell
-mode is integrated with `matlab-mode', a major mode for editing M
-code.
-
-> From an M file buffer:
-\\<matlab-mode-map>
-\\[matlab-shell-save-and-go] - Save the current M file, and run it in a \
-MATLAB shell.
-
-> From Shell mode:
-\\<matlab-shell-mode-map>
-\\[matlab-shell-last-error] - find location of last MATLAB runtime error \
-in the offending M file.
-
-> From an M file, or from Shell mode:
-\\<matlab-mode-map>
-\\[matlab-shell-run-command] - Run COMMAND and show result in a popup buffer.
-\\[matlab-shell-describe-variable] - Show variable contents in a popup buffer.
-\\[matlab-shell-describe-command] - Show online documentation for a command \
-in a popup buffer.
-\\[matlab-shell-apropos] - Show output from LOOKFOR command in a popup buffer.
-
-> Keymap:
-\\{matlab-mode-map}"
+mode is integrated with `matlab-ts-mode' or the older `matlab-mode', a
+major mode for editing *.m files.  See the MATLAB menu in these
+buffers for the integration with matlab-shell-mode."
   (setq major-mode 'matlab-shell-mode
         mode-name "M-Shell"
         comint-prompt-regexp "^\\(K\\|EDU\\)?>> *"
@@ -501,18 +369,16 @@ in a popup buffer.
   (if (fboundp 'comint-read-input-ring)
       (comint-read-input-ring t))
 
-  ;;; MODE Settings
-  (make-local-variable 'comment-start)
-  (setq comment-start "%")
+  (setq-local comment-start "%")
 
   (use-local-map matlab-shell-mode-map)
-  (set-syntax-table matlab-mode-syntax-table)
+  (set-syntax-table (matlab--shell-get-syntax-table))
 
-  (make-local-variable 'font-lock-defaults)
-  (setq font-lock-defaults '((matlab-shell-font-lock-keywords-1
-                              matlab-shell-font-lock-keywords-2
-                              matlab-shell-font-lock-keywords-3)
-                             t nil ((?_ . "w"))))
+  (setq-local font-lock-defaults '((matlab-shell-font-lock-keywords)
+                             t   ;; syntactic fontification (strings and comments) is not performed.
+                             nil ;; keywords are case sensitive
+                             ;; Put _ as a word constituent, simplifying keywords
+                             ((?_ . "w"))))
 
   ;; GUD support
   (matlab-shell-mode-gud-enable-bindings)
@@ -601,7 +467,7 @@ Try C-h f matlab-shell RET"))
     (let* ((windowid (frame-parameter (selected-frame) 'outer-window-id))
            (newvar (concat "WINDOWID=" windowid))
            (process-environment (cons newvar process-environment))
-           (abs-matlab-exe (matlab-shell--abs-matlab-exe))
+           (abs-matlab-exe (matlab--get-abs-matlab-exe))
            (matlab-exe (if (file-remote-p abs-matlab-exe)
                            matlab-shell-command
                          abs-matlab-exe)))
@@ -1335,7 +1201,7 @@ STR is a command substring to complete."
 
       (cond
        ;; Case: R2025a and later
-       ((string-match "^\s*Completions-Lisp:[[:space:]]*\\('(\\(?:.\\|\n\\)+)\\)[[:space:]]*$"
+       ((string-match "^\s*Completions-Lisp:[ \t\n\r]*\\('(\\(?:.\\|\n\\)+)\\)[ \t\n\r]*$"
                       output)
         ;; Completions that can be provided to `display-completion-list'
         (let ((completions-str (match-string 1 output)))
@@ -1614,15 +1480,9 @@ installed, then use company to display completions in a popup window."
     ;; so well because it can take MATLAB a bit to compute completions.
     (call-interactively 'company-matlab-shell))
 
-   ;; Starting in Emacs 23, completion-in-region has everything we need for basic
-   ;; in-buffer completion
-   ((fboundp 'completion-in-region)
-    (matlab-shell-do-completion-light))
-
-   ;; Old school completion
+   ;; Use stock Emacs completion
    (t
-    (matlab-shell-do-completion))
-   ))
+    (matlab-shell-do-completion-light))))
 
 (defun matlab-shell-do-completion-light ()
   "Perform completion using `completion-in-region'."
@@ -1635,71 +1495,16 @@ installed, then use company to display completions in a popup window."
     (when (and (not did-completion) common-substr-start-pt common-substr-end-pt)
       (completion-in-region common-substr-start-pt common-substr-end-pt completions))))
 
-(defun matlab-shell-do-completion ()
-  "Perform completion using Emacs buffers.
-This should work in version before `completion-in-region' was available."
-  (let* ((inhibit-field-text-motion t)
-         (completion-info        (matlab-shell-get-completion-info))
-         ;;(last-cmd               (cdr (assoc 'last-cmd completion-info)))
-         (common-substr          (cdr (assoc 'common-substr completion-info)))
-         ;; (limit-pos              (cdr (assoc 'limit-pos completion-info)))
-         (completions            (cdr (assoc 'completions completion-info)))
-         (common-substr-start-pt (cdr (assoc 'common-substr-start-pt completion-info)))
-         (common-substr-end-pt   (cdr (assoc 'common-substr-end-pt completion-info)))
-         (did-completion         (cdr (assoc 'did-completion completion-info))))
-
-    (unless did-completion
-      ;; Whack the old command 'substring' that is starting part of the
-      ;; completions so we can insert it back later
-      (delete-region common-substr-start-pt common-substr-end-pt)
-      (goto-char (point-max))
-      ;; Process the completions
-      (if (eq (length completions) 1)
-          ;; If there is only one, then there is an obvious thing to do.
-          (progn
-            (insert (car (car completions)))
-            ;; kill completions buffer if still visible
-            (matlab-shell-tab-hide-completions))
-        ;; else handle multiple completions
-        (let ((try (try-completion common-substr completions)))
-          ;; Insert in a good completion.
-          (cond ((or (eq try nil) (eq try t)
-                     (and (stringp try)
-                          (string= try common-substr)))
-                 (insert common-substr)
-                 (let ((cbuff (get-buffer-create "*Completions*")))
-                   (with-output-to-temp-buffer cbuff
-                     (matlab-display-completion-list (mapcar #'car completions)
-                                                     common-substr))
-                   (display-buffer
-                    cbuff
-                    '((display-buffer-below-selected display-buffer-at-bottom)
-                      (inhibit-same-window . t)
-                      (window-height . fit-window-to-buffer))
-                    )
-                   ))
-                ((stringp try)
-                 (insert try)
-                 (matlab-shell-tab-hide-completions))
-                (t
-                 (insert common-substr))))
-        ))))
-
-(defun matlab-shell-tab-hide-completions ()
-  "Hide any completion windows for `matlab-shell-tab'."
-  (let ((bw (get-buffer-window "*Completions*")))
-    (when bw
-      (quit-window nil (get-buffer-window "*Completions*")))))
-
 ;;; Find Files
 ;;
 ;; Finding Files with MATLAB shell.
 
 (defun matlab-shell-which-fcn (fcn)
   "Get the location of FCN's M file.
-Returns an alist: ( LOCATION . BUILTINFLAG )
-LOCATION is a string indicating where it is, and BUILTINFLAG is
-non-nil if FCN is a builtin."
+Returns cons (LOCATION . BUILTIN-FLAG) or nil if not found.
+LOCATION is a string indicating where it is, and BUILTIN-FLAG is non-nil
+if FCN is a builtin.  When BUILTIN-FLAG is t, the LOCATION may be a file
+that doesn't exist."
   (save-excursion
     (let* ((msbn (matlab-shell-buffer-barf-not-running))
            (cmd (format "disp(which('%s'))" fcn))
@@ -1733,9 +1538,13 @@ non-nil if FCN is a builtin."
           (let ((s (read-string (concat "MATLAB locate fcn (default " default "): "))))
             (if (string= s "") default s))
         (read-string "MATLAB locate fcn: ")))))
-  (let ((file (matlab-shell-which-fcn fcn)))
-    (if file
-        (find-file (car file))
+  (let ((file-pair (matlab-shell-which-fcn fcn)))
+    (if file-pair
+        (let ((file (car file-pair)))
+          (if (or (not (string-match-p "\\.m\\'" file))
+                  (not (file-exists-p file)))
+              (error "%s is built-in or a non-m-file" file)
+            (find-file file)))
       (error "Command which('%s') returned empty" fcn))))
 
 (defvar matlab-shell-matlabroot-run nil
@@ -1801,10 +1610,7 @@ Snatched and hacked from dired-x.el"
               ""
             (search-forward-regexp comint-prompt-regexp)
             (buffer-substring (point) (line-end-position)))))
-    (save-excursion
-      (buffer-substring-no-properties
-       (matlab-scan-beginning-of-command)
-       (matlab-scan-end-of-command)))))
+    (matlab--get-command-at-point-to-run)))
 
 (defun matlab-non-empty-lines-in-string (str)
   "Return number of non-empty lines in STR."
@@ -1836,7 +1642,7 @@ This command requires an active MATLAB shell."
                       "MATLAB command line: "
                       (cons (matlab-read-line-at-point) 0))))
   (let ((doc (matlab-shell-collect-command-output command)))
-    (matlab-output-to-temp-buffer "*MATLAB Help*" doc)))
+    (matlab-output-to-temp-buffer "*MATLAB Run Command Result*" doc)))
 
 (defun matlab-shell-describe-variable (variable)
   "Get the contents of VARIABLE and display them in a buffer.
@@ -1853,7 +1659,7 @@ This command requires an active MATLAB shell."
 This uses the lookfor command to find viable commands.
 This command requires an active MATLAB shell."
   (interactive
-   (let ((fn (matlab-function-called-at-point))
+   (let ((fn (matlab--function-called-at-point))
          val)
      (setq val (read-string (if fn
                                 (format "Describe function (default %s): " fn)
@@ -2305,11 +2111,11 @@ Value is set to COMMAND."
   (interactive (list (read-string "sCommand: "
                                   (file-name-sans-extension
                                    (file-name-nondirectory (buffer-file-name))))))
-  (unless (eq major-mode 'matlab-mode)
-    (error "Cannot set save-and-go command for buffer in %s" major-mode))
+  (when (and (not (eq major-mode 'matlab-ts-mode))
+             (not (eq major-mode 'matlab-mode)))
+      (user-error "Current buffer is not a MATLAB mode"))
 
-  (add-dir-local-variable 'matlab-mode 'matlab-shell-save-and-go-command
-                          command))
+  (add-dir-local-variable major-mode 'matlab-shell-save-and-go-command command))
 
 (defun matlab-shell-add-to-input-history (string)
   "Add STRING to the input-ring and run `comint-input-filter-functions' on it.
@@ -2329,10 +2135,11 @@ Similar to  `comint-send-input'."
 (defun matlab-shell-save-and-go ()
   "Save this M file, and evaluate it in a MATLAB shell."
   (interactive)
-  (if (not (eq major-mode 'matlab-mode))
-      (error "Save and go is only useful in a MATLAB buffer!"))
-  (if (not (buffer-file-name (current-buffer)))
-      (call-interactively 'write-file))
+  (when (and (not (eq major-mode 'matlab-ts-mode))
+             (not (eq major-mode 'matlab-mode)))
+    (user-error "Current buffer is not a MATLAB mode"))
+  (when (not (buffer-file-name (current-buffer)))
+    (call-interactively 'write-file))
 
   (let* ((fn-name (file-name-sans-extension
                    (file-name-nondirectory (buffer-file-name))))
@@ -2435,30 +2242,10 @@ Similar to  `comint-send-input'."
 ;;
 ;; Run some subset of the buffer in matlab-shell.
 
-(defun matlab-shell-run-code-section ()
-  "Run the code-section the cursor is in."
-  (interactive)
-  (let ((start (save-excursion
-                 (forward-page -1)
-                 (if (looking-at "function")
-                     (error "You are not in a code-section.  Try `matlab-shell-save-and-go' instead"))
-                 (when (matlab-line-comment-p (matlab-compute-line-context 1))
-                   ;; Skip over starting comment from the current code-section.
-                   (matlab-end-of-command)
-                   (end-of-line)
-                   (forward-char 1))
-                 (point)))
-        (end (save-excursion
-               (forward-page 1)
-               (when (matlab-line-comment-p (matlab-compute-line-context 1))
-                 (beginning-of-line)
-                 (forward-char -1))
-               (point))))
-    (matlab-shell-run-region start end t)))
-
 (defun matlab-shell-run-region-or-line ()
   "Run region from BEG to END and display result in MATLAB shell.
-pIf region is not active run the current line.
+This should be called from a *.m file in `matlab-ts-mode' or
+`matlab-mode'.  If region is not active run the current line.
 This command requires an active MATLAB shell."
   (interactive)
   (if (and transient-mark-mode mark-active)
@@ -2469,8 +2256,9 @@ This command requires an active MATLAB shell."
 ;;;###autoload
 (defun matlab-shell-run-region (beg end &optional noshow)
   "Run region from BEG to END and display result in MATLAB shell.
-If NOSHOW is non-nil, replace newlines with commas to suppress
-output.  This command requires an active MATLAB shell."
+If NOSHOW is non-nil, replace newlines with commas to suppress output.
+This should be called from a *.m file in `matlab-ts-mode' or
+`matlab-mode'.  This command requires an active MATLAB shell."
   (interactive "r")
   (if (> beg end) (let (mid) (setq mid beg  beg end  end mid)))
 
@@ -2545,6 +2333,9 @@ Optional argument NOSHOW specifies if we should echo the region to the
    (t
     (funcall matlab-shell-run-region-function beg end noshow))))
 
+(defsubst matlab--cursor-in-string ()
+  "Return t if the cursor is in a valid MATLAB character vector or string scalar."
+  (nth 3 (syntax-ppss (point))))
 
 (defun matlab-shell-region->commandline (beg end &optional noshow)
   "Convert the region between BEG and END into a MATLAB command.
@@ -2558,7 +2349,7 @@ When NOSHOW is non-nil, suppress output by adding ; to commands."
       (goto-char (point-min))
       ;; Delete all the comments
       (while (search-forward "%" nil t)
-        (unless (matlab-cursor-in-string)
+        (unless (matlab--cursor-in-string)
           (delete-region (1- (point)) (line-end-position))))
       (setq str (buffer-substring-no-properties (point-min) (point-max))))
 
@@ -2574,7 +2365,7 @@ When NOSHOW is non-nil, suppress output by adding ; to commands."
       ;; Remove continuations
       (while (string-match
               (concat "\\s-*"
-                      (regexp-quote matlab-ellipsis-string)
+                      (regexp-quote "...")
                       "\\s-*\n")
               str)
         (setq str (replace-match " " t t str)))
@@ -2694,7 +2485,7 @@ Argument FNAME specifies if we should echo the region to the command line."
                `(lambda () (matlab-shell-cleanup-extracted-region ,fname)))
   )
 
-(defun matlab-find-file-click (e)
+(defun matlab-shell-find-file-click (e)
   "Find the file clicked on with event E on the current path."
   (interactive "e")
   (mouse-set-point e)
@@ -2713,7 +2504,8 @@ Argument FNAME specifies if we should echo the region to the command line."
 ;; LocalWords:  auth mlfile EMAACSCAP buffname showbuff symlink'd emacsinit sha dirs ebstop
 ;; LocalWords:  evalforms Histed pmark memq promptend numchars integerp emacsdocomplete mycmd ba
 ;; LocalWords:  nreverse emacsdocompletion byteswap stringp cbuff mapcar bw FCN's alist substr usr
-;; LocalWords:  BUILTINFLAG dired bol bobp numberp princ minibuffer fn matlabregex lastcmd notimeout
+;; LocalWords:  dired bol bobp numberp princ minibuffer fn matlabregex lastcmd notimeout
 ;; LocalWords:  stacktop eltest testme localfcn LF fileref funcall ef ec basec sk nondirectory utils
 ;; LocalWords:  ignoredups boundp edir sexp Fixup mapc emacsrun noshow cnt ellipsis newf bss noselect
-;; LocalWords:  fname mlx xemacs linux darwin truename clientcmd simulationc caar
+;; LocalWords:  fname mlx xemacs linux darwin truename clientcmd simulationc caar fontification
+;; LocalWords:  defsubst ppss

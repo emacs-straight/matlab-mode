@@ -1,10 +1,10 @@
 ;;; matlab-sections.el --- Support for code sections in matlab mode -*- lexical-binding: t -*-
 
-;; Copyright (C) 2024-2025 Free Software Foundation, Inc.
-
 ;; Author: Nidish Narayanaa Balaji <nidbid@gmail.com>, John Ciolfi <john.ciolfi.32@gmail.com>, Eric Ludlam <zappo@gnu.org>
 ;; Created: 2024-05-14
 ;; Renamed: 2024-10-22
+
+;; Copyright (C) 2024-2025 Free Software Foundation, Inc.
 ;;
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 ;;
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
-;;
+
 ;;; Commentary:
 ;;
 ;; This provides `matlab-sections-minor-mode' contains utilities for working with MATLAB code
@@ -133,7 +133,7 @@ the command `matlab-sections-minor-mode' to turn matlab-sections mode on."
 ;; Function to obtain range of current code section
 
 (defun matlab-sections--get-heading (&optional range)
-  "Return the \"%% descrition\" heading or nil if not in a code section.
+  "Return the \"%% description\" heading or nil if not in a code section.
 RANGE is (START-PT . END-PT) of the section or nil.  If nil, we'll
 determine the RANGE."
   (when (not range)
@@ -488,8 +488,9 @@ See `matlab-sections-help' for details on MATLAB code sections."
   :init-value nil
   :keymap matlab-sections-minor-mode-map
 
-  (make-local-variable 'page-delimiter)
-  (setq page-delimiter matlab-sections-section-break-regexp)
+  (when (eq major-mode 'matlab-mode)
+    ;; page-delimiter is setup by matlab-ts-mode (and is more accurate there)
+    (setq-local page-delimiter matlab-sections-section-break-regexp))
   (when matlab-sections-highlight-section
     (matlab-sections-setup-section-highlight)))
 

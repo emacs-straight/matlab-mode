@@ -1,15 +1,15 @@
-% Copyright 2019-2025 Free Software Foundation, Inc.
-
+% Copyright (C) 2019-2025 Free Software Foundation, Inc.
+%
 % This program is free software: you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
 % the Free Software Foundation, either version 3 of the License, or
 % (at your option) any later version.
-
+%
 % This program is distributed in the hope that it will be useful,
 % but WITHOUT ANY WARRANTY; without even the implied warranty of
 % MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 % GNU General Public License for more details.
-
+%
 % You should have received a copy of the GNU General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -20,7 +20,7 @@ function emacsrun(mfile, varargin)
 %
 % Command sent by Emacs for save-and-go functionality
 
-    mfile = emacsstripremote(mfile)
+    mfile = emacsstripremote(mfile);
     % Now figure out if shortFileName is on the path.
     [ fullFilePath, shortFileName ] = fileparts(mfile);
     onpath = ~isempty(which(shortFileName));
@@ -30,7 +30,7 @@ function emacsrun(mfile, varargin)
     end
 
     
-    % If not on the path, temporarilly switch to that directory so it and an files it references are
+    % If not on the path, temporarily switch to that directory so it and an files it references are
     % accessible
     if ~onpath
         oldpath = pwd;
@@ -43,3 +43,5 @@ function emacsrun(mfile, varargin)
     
     evalin('base',cmd);
 end
+
+% LocalWords:  MFILE

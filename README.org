@@ -1,16 +1,18 @@
 #+startup: showall
 #+options: toc:nil
 
-# Copyright 2016-2025 Free Software Foundation, Inc.
+# Copyright (C) 2016-2025 Free Software Foundation, Inc.
 
 * Emacs MATLAB-mode
 
 [[https://mathworks.com][MathWorks]] MATLAB® and [[https://www.gnu.org/software/emacs/][GNU Emacs]] integration:
 
-1. *matlab-mode* for editing ~*.m~ files.
+1. MATLAB mode, *matlab-ts-mode* or *matlab-mode*, for editing ~*.m~ files.
 
    - Edit MATLAB code with syntax highlighting and smart indentation.
    - Lint MATLAB code with fix-it's using the MATLAB Code Analyzer.
+
+   The *matlab-ts-mode* is a more capable, performant, and accurate than *matlab-mode*.
 
 2. *Code navigation and more*
 
@@ -82,46 +84,47 @@
 
 * Installation
 
-** Install via ELPA or MELPA
+1. Install the MATLAB package via [[https://melpa.org][MELPA]] or [[https://elpa.gnu.org/][ELPA]]. MELPA contains the latest version.  To install from
+   MELPA, add to your =~/.emacs=
 
-Install via [[https://elpa.gnu.org/][ELPA]] or [[https://melpa.org][MELPA]]. MELPA contains the latest. To install from MELPA, add to your =~/.emacs=
+   #+begin_src emacs-lisp
+     (require 'package)
+     (add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/") t)
+   #+end_src
 
-#+begin_src emacs-lisp
-  (require 'package)
-  (add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/") t)
-#+end_src
+   Restart Emacs and then
 
-To install from either ELPA or MELPA
+   : M-x package-install RET matlab-mode RET
 
-: M-x RET list-packages RET
+   Note: to all available packages, =M-x RET list-packages RET=
 
-and click on matlab-mode to install.
+2. [Optional] Install the =company= package which is used for TAB completions.
+
+   : M-x package-install RET company RET
+
+3. [Optional] Install MATLAB tree-sitter for matlab-ts-mode, which provides improved editing
+   capabilities and improved performance.
+
+   The MATLAB tree-sitter leverages [[https://tree-sitter.github.io/tree-sitter/][Tree-sitter]] to create a parse tree for MATLAB code.  The parse
+   tree is updated incrementally and is robust to syntax errors. It is highly performant and
+   achieves this by being implemented in C to create a shared object that is loaded into the Emacs
+   process.  *matlab-ts-mode* leverages the MATLAB tree-sitter to give an improved MATLAB editing
+   experience when compared with matlab-mode.
+
+   See [[file:doc/install-matlab-tree-sitter-grammar.org][doc/install-matlab-tree-sitter-grammar.org]]
+
+4. [Optional] Install lsp-mode and the [[file:doc/matlab-language-server-lsp-mode.org][MATLAB Language Server]] for an improved editing experience.
+
+5. [Optional] Check your installation setup.
+
+   If you are using *matlab-ts-mode*, visit a =*.m= MATLAB file and select the menu item:
+
+   : MATLAB -> Check setup
 
 ** Install from this repository
 
-Build:
-
-#+begin_src bash
-  cd /path/to/Emacs-MATLAB-mode
-
-  # Build lisp and run tests (requires MATLAB executable):
-  make
-
-  # Alternatively, build lisp and run tests using a specific MATLAB executable:
-  make MATLAB_EXE=/path/to/matlab
-
-  # If desired, you can separate the building of lisp and running tests using:
-  make lisp
-  make tests
-  make tests MATLAB_EXE=/path/to/matlab # if using a specific MATLAB executable
-#+end_src
-
-Add the following to your =~/.emacs= file:
-
-#+begin_src emacs-lisp
-  (add-to-list 'load-path "/path/to/Emacs-MATLAB-mode")
-  (load-library "matlab-autoload")
-#+end_src
+If you are contributing to the Emacs MATLAB Mode package, see
+[[file:contributing/install-emacs-matlab-from-git.org][contributing/install-emacs-matlab-from-git.org]]
 
 * MathWorks Products ([[https://www.mathworks.com][https://www.mathworks.com]])
 
@@ -142,10 +145,13 @@ See [[file:doc/faq.org][doc/faq.org]]
 
 * Mailing list
 
+[[mailto:matlab-emacs-discuss@lists.sourceforge.net]]
+
 https://sourceforge.net/projects/matlab-emacs/
 
 * Releases
 
 See [[file:NEWS.org][NEWS.org]]
 
-# LocalWords:  showall nodesktop melpa emacsclient matlabsection
+# LocalWords:  showall nodesktop melpa emacsclient matlabsection lsp matlabls Imenu imenu netshell
+# LocalWords:  emacsinit ELPA faq mailto sourceforge libtree dylib langs treesit abi MSys alist

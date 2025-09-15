@@ -1,21 +1,21 @@
 ;;; matlab-cgen.el --- In buffer code generation features (templates, etc) -*- lexical-binding: t -*-
 
-;; Copyright (C) 2024 Free Software Foundation, Inc.
-
 ;; Author: Eric Ludlam <zappo@gnu.org>
+
+;; Copyright (C) 2019-2024 Free Software Foundation, Inc.
 ;;
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License as
 ;; published by the Free Software Foundation, either version 3 of the
 ;; License, or (at your option) any later version.
-
+;;
 ;; This program is distributed in the hope that it will be useful, but
 ;; WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 ;; General Public License for more details.
-
+;;
 ;; You should have received a copy of the GNU General Public License
-;; along with this program.  If not, see http://www.gnu.org/licenses/.
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;;
@@ -32,7 +32,7 @@
 
 ;; This trick allows this file to be autoloaded ONLY when the user uses the insert prefix.
 ;;
-;;;###autoload (autoload 'matlab-insert-map-fcn "matlab-cgen" "Keymap for C-c C-c in matlab-mode" t 'keymap)
+;;;###autoload (autoload 'matlab-insert-map-fcn "matlab-cgen" "Keymap for C-c C-c in matlab-ts-mode or matlab-mode" t 'keymap)
 
 (defvar matlab-insert-map
   (let ((km (make-sparse-keymap)))
@@ -46,8 +46,6 @@
     (define-key km "w" 'tempo-template-matlab-while)
     (define-key km "F" 'tempo-template-matlab-function)
     (define-key km "'" 'matlab-stringify-region)
-    ;; Not really inserts, but auto coding stuff
-    (define-key km "\C-s" 'matlab-ispell-strings-and-comments)
     km)
   "Keymap used for inserting simple texts based on context.")
 
