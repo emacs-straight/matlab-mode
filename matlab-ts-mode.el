@@ -1,6 +1,6 @@
 ;;; matlab-ts-mode.el --- MATLAB(R) Tree-Sitter Mode -*- lexical-binding: t -*-
 
-;; Version: 7.2.1
+;; Version: 7.3.0
 ;; URL: https://github.com/mathworks/Emacs-MATLAB-Mode
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 ;;
@@ -258,7 +258,7 @@ content can crash Emacs via the matlab tree-sitter parser."
       (goto-char bad-char-point)
       (user-error
        "Not entering matlab-ts-mode due to non-printable utf8 character \"%c\" at point %d"
-       (char-before) bad-char-point ))))
+       (char-before) bad-char-point))))
 
 ;;; Syntax table
 
@@ -464,9 +464,11 @@ help doc comment."
 
   (let ((prev-node (treesit-node-prev-sibling comment-node)))
     (when prev-node
-      (while (string-match-p (rx bos "line_continuation" eos)
+
+      (while (string-match-p (rx bos (or "line_continuation" "\n") eos)
                              (treesit-node-type prev-node))
         (setq prev-node (treesit-node-prev-sibling prev-node)))
+
       (let ((prev-type (treesit-node-type prev-node)))
         ;; The true (t) cases. Note line continuation ellipsis are allowed.
         ;;    function foo          function foo(a)
@@ -1219,7 +1221,16 @@ is where we start looking for the error node."
                              (treesit-node-type check-node))
         (goto-char (treesit-node-start check-node))
         (if (re-search-backward "[^ \t\n\r]" nil t)
-            (setq check-node (treesit-node-at (point)))
+            (let* ((pt (point))
+                   (node-at-pt (treesit-node-at pt)))
+              ;; Be robust to node-at-point range not covering pt
+              ;; See: https://github.com/acristoffers/tree-sitter-matlab/issues/116
+              ;; TODO - do we need to do this elsewhere?
+              (while (and node-at-pt
+                          (or (<  pt (treesit-node-start node-at-pt))
+                              (>= pt (treesit-node-end   node-at-pt))))
+                (setq node-at-pt (treesit-node-parent node-at-pt)))
+              (setq check-node node-at-pt))
           ;; at start of buffer
           (setq check-node nil)))
 
@@ -1469,6 +1480,27 @@ Similar for case and otherwise statements."
     (and prev-sibling
          (string= (treesit-node-type prev-sibling) "line_continuation"))))
 
+(defvar matlab-ts-mode--i-prior-line-anchor-point nil)
+
+(defun matlab-ts-mode--i-prior-line-anchor (&rest _)
+  "Return anchor point for `matlab-ts-mode--i-prior-line-matcher'."
+  matlab-ts-mode--i-prior-line-anchor-point)
+
+(defun matlab-ts-mode--i-prior-line-matcher (node _parent bol &rest _)
+  "Keep current indent level when NODE is nil.
+This occurs when RET was typed on prior line.
+BOL is beginning of line point for NODE.
+See: tests/test-matlab-ts-mode-indent-files/indent_line_cont_multiple_times.m"
+  (when (not node) ;; RET on prior line?
+    (save-excursion
+      (goto-char bol)
+      (when (>= (forward-line -1) 0)
+        (beginning-of-line)
+        (when (looking-at "^[ \t]*\\.\\.\\.")
+          (back-to-indentation)
+          (setq matlab-ts-mode--i-prior-line-anchor-point (point))
+          t)))))
+
 (defun matlab-ts-mode--i-cont-offset (node parent _bol &rest _)
   "Get the ellipsis continuation offset based on NODE with PARENT.
 This is `matlab-ts-mode--indent-level' or 0 when in a cell or matrix
@@ -1498,10 +1530,25 @@ row."
 
 (defvar matlab-ts-mode--i-cont-incomplete-matcher-pair)
 
-(cl-defun matlab-ts-mode--i-cont-incomplete-matcher (node parent _bol &rest _)
+(cl-defun matlab-ts-mode--i-cont-incomplete-matcher (node parent bol &rest _)
   "Is current line part of an ellipsis line continuation?
 If so, set `matlab-ts-mode--i-cont-incomplete-matcher-pair'.  This is for
-incomplete statements where NODE is nil and PARENT is line_continuation."
+incomplete statements where NODE is nil and PARENT is line_continuation
+or when NODE is non-nil and is a line_continuation only line.
+NODE is at BOL."
+
+  (when (and (equal (treesit-node-type node) "line_continuation")
+             (save-excursion
+               (goto-char bol)
+               (beginning-of-line)
+               (looking-at "^[ \t]*\\.\\.\\.")))
+    (save-excursion
+      (when (>= (forward-line -1) 0)
+        (beginning-of-line)
+        (back-to-indentation)
+        (setq matlab-ts-mode--i-cont-incomplete-matcher-pair
+              (cons (treesit-node-start (treesit-node-at (point))) 0))
+        (cl-return-from matlab-ts-mode--i-cont-incomplete-matcher t))))
 
   ;; Case when code is incomplete:
   ;;
@@ -2106,6 +2153,9 @@ Prev-siblings:
                                  prev-sibling-error-node)))
               (when (and (or (not node)
                              (not (equal node error-node)))
+                         ;; For condition (not (= bol (treesit-node-start error-node))), see
+                         ;; tests/test-matlab-ts-mode-indent-files/indent_parse_error_in_class.m
+                         (not (= bol (treesit-node-start error-node)))
                          (> (treesit-node-start error-node) (treesit-node-start anchor-node)))
                 (setq anchor-node error-node)))
 
@@ -2660,6 +2710,20 @@ Example:
      ;; See: tests/test-matlab-ts-mode-indent-files/indent_line_continuation.m
      ;; See: tests/test-matlab-ts-mode-indent-files/indent_line_continuation_row.m
      (,#'matlab-ts-mode--i-cont-matcher parent ,#'matlab-ts-mode--i-cont-offset)
+
+     ;; I-Rule: prior line node
+     (,#'matlab-ts-mode--i-prior-line-matcher
+      ,#'matlab-ts-mode--i-prior-line-anchor
+      0)
+
+     ;; I-Rule: indent blank line when adding args to fcn call
+     ;; See: tests/test-matlab-ts-mode-indent-xr-files/indent_xr_blank_line_in_fcn_call.m
+     ((and no-node
+           (parent-is ,(rx bos "function_call" eos)))
+      (lambda (_node parent _bol &rest _)
+        (let ((fcn-name (treesit-node-child-by-field-name parent "name")))
+          (treesit-node-start (treesit-node-next-sibling fcn-name))))
+      1)
 
      ;; I-Rule: Assert if no rule matched and asserts are enabled.
      ,matlab-ts-mode--indent-assert-rule
@@ -3224,13 +3288,17 @@ single quote string."
        ;; Case: string delimiter
        ;;    double up if starting a new string => return nil
        ;; For:     s = '
-       ;; we have: (source_file
-       ;;           (postfix_operator operand: (identifier)
-       ;;            (ERROR =)
-       ;;            ')
-       ;;           \n)
-       ((string= "'" type-back1 )
-        (not (equal (treesit-node-type (treesit-node-prev-sibling node-back1)) "ERROR")))
+       ;; we have:         (source_file
+       ;;                   (ERROR (identifier) = (ERROR)))
+       ((string= "ERROR" type-back1)
+        nil)
+
+       ;; For:             s = '
+       ;; We've also seen: (source_file
+       ;;                   (ERROR (identifier) = '))
+       ((string= "'" type-back1)
+        (not (or (equal (treesit-node-type (treesit-node-prev-sibling node-back1)) "ERROR")
+                 (equal (treesit-node-type (treesit-node-parent node-back1)) "ERROR"))))
 
        ;; Case: inside a single quote string
        ;;    s = 'foobar'
@@ -3503,6 +3571,28 @@ THERE-END MISMATCH) or nil."
                                            unread-command-events))
         ))))
 
+(defun matlab-ts-mode--add-final-newline (&optional restore-readonly)
+  "Add a final newline to non-empty buffer to make tree-sitter happy.
+If a final new-line is missing, matlab tree-sitter can generate a parse
+error because it looks for the newline to finish statements.
+
+If optional RESTORE-READONLY is non-nil, then if the buffer is read-only
+upon calling this function, it will be restored back to read-only if a
+final newline was inserted."
+  (save-excursion
+    (goto-char (point-max))
+    (when (and (< (point-min) (point-max))
+               (not (= (char-before) ?\n)))
+      (let ((is-read-only buffer-read-only))
+        (when is-read-only
+          (read-only-mode 0))
+        (insert "\n")
+        (when (and restore-readonly
+                   is-read-only)
+          (set-buffer-modified-p nil))
+        (when is-read-only
+          (read-only-mode 1))))))
+
 (defun matlab-ts-mode--post-insert-callback ()
   "Callback attached to `post-self-insert-hook'.
 
@@ -3518,11 +3608,7 @@ This callback also implements `matlab-ts-mode-electric-ends'."
   (when (eq major-mode 'matlab-ts-mode)
     (let ((ret-typed (eq last-command-event ?\n)))
 
-      ;; Add final newline to the buffer?
-      (save-excursion
-        (goto-char (point-max))
-        (when (not (= (char-before) ?\n))
-          (insert "\n")))
+      (matlab-ts-mode--add-final-newline)
 
       ;; Add "end" (for `matlab-ts-mode-electric-ends')
       (when (and ret-typed
@@ -3713,6 +3799,12 @@ provided."
 Optional NO-POP-TO-BUFFER, if non-nil will not run `pop-to-buffer'.
 The errors are displayed in a \"*parse errors in BUFFER-NAME*\" buffer
 and this buffer is returned."
+
+  ;; Note, matlab tree-sitter can detect errors that it seems MATLAB cannot. For example, the
+  ;; codeIssues() command in MATLAB R2026a doesn't detect that
+  ;;   1 + @foo
+  ;; is a syntax error (you cannot add a number to a function handle).
+
   (interactive)
 
   (when (not (eq major-mode 'matlab-ts-mode))
@@ -4005,6 +4097,9 @@ so configuration variables of that mode, do not affect this mode.
   (matlab-ts-mode--check-file-encoding)
 
   (when (treesit-ready-p 'matlab)
+
+    (matlab-ts-mode--add-final-newline 'restore-readonly)
+
     (treesit-parser-create 'matlab)
 
     ;; Syntax table - think of this as a "language character descriptor". It tells us what
