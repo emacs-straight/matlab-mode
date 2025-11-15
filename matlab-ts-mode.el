@@ -1,6 +1,6 @@
 ;;; matlab-ts-mode.el --- MATLAB(R) Tree-Sitter Mode -*- lexical-binding: t -*-
 
-;; Version: 7.3.0
+;; Version: 7.3.1
 ;; URL: https://github.com/mathworks/Emacs-MATLAB-Mode
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 ;;
@@ -222,6 +222,43 @@ The returned point, pt, reflects that location."
                           (treesit-node-at pt))
                       node-at-point)))
     (cons pt real-node)))
+
+(defun matlab-ts-mode--child-last-node (parent-node)
+  "Get the logical child last node of PARENT-NODE.
+Consider:
+
+  classdef enum1 < uint32
+      enumeration
+          A (0)
+          B  (1)
+      end
+  end
+
+with parse tree:
+
+  (source_file
+   (class_definition classdef name: (identifier)
+    (superclasses <
+     (property_name (identifier)))
+    \\n
+    (enumeration enumeration \\n
+     (enum (identifier) ( (number) ))
+     \\n
+     (enum (identifier) ( (number) ))
+     \\n end \\n)
+    end)
+   \\n)
+
+The last node of the \"(enumeration ... \\n)\" is \"\\n\" and the
+logical last node is \"end\"."
+  (let* ((children (treesit-node-children parent-node))
+         (last-idx (1- (length children)))
+         (last-node (nth last-idx children)))
+    (while (and (>= last-idx 0)
+                (string= (treesit-node-text last-node) "\n"))
+      (setq last-idx (1- last-idx))
+      (setq last-node (nth last-idx children)))
+    last-node))
 
 ;;; File encoding
 
@@ -3369,7 +3406,7 @@ THERE-END MISMATCH) or nil."
            ((string-match-p start-re node-type)
             (let* ((expected-parent-type (cdr (assoc node-type start-to-parent)))
                    (expected-end-type "end") ;; all blocks terminate with an "end" statement
-                   (end-node (car (last (treesit-node-children parent-node)))))
+                   (end-node (matlab-ts-mode--child-last-node parent-node)))
               (setq here-begin (treesit-node-start node)
                     here-end (treesit-node-end node))
               (if (and (equal (treesit-node-type parent-node) expected-parent-type)
@@ -4113,7 +4150,7 @@ so configuration variables of that mode, do not affect this mode.
     ;; See: tests/test-matlab-ts-mode-comments.el
     (setq-local comment-start      "% ")
     (setq-local comment-end        "")
-    (setq-local comment-start-skip "%\\s-+")
+    (setq-local comment-start-skip "%\\s-*")
 
     ;; Setup `forward-page' and `backward-page' to use ^L or "%% heading" comments
     ;; See: ./tests/test-matlab-ts-mode-page.el
