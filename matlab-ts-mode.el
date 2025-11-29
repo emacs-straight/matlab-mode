@@ -1,6 +1,6 @@
 ;;; matlab-ts-mode.el --- MATLAB(R) Tree-Sitter Mode -*- lexical-binding: t -*-
 
-;; Version: 7.3.1
+;; Version: 7.4.1
 ;; URL: https://github.com/mathworks/Emacs-MATLAB-Mode
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 ;;
@@ -52,94 +52,14 @@
   :prefix "matlab-ts-mode-"
   :group 'languages)
 
-(defface matlab-ts-mode-pragma-face
-  '((t :inherit font-lock-comment-face
-       :bold t))
-  "*Face to use for pragma %# lines.")
-
-(defface matlab-ts-mode-string-delimiter-face
-  '((t :inherit font-lock-string-face
-       :bold t))
-  "*Face to use for \\='single quote\\=' and \"double quote\" string delimiters.")
-
-(defface matlab-ts-mode-comment-heading-face
-  '((t :inherit font-lock-comment-face
-       :overline t
-       :bold t))
-  "*Face for \"%% code section\" headings when NOT in matlab-sections-minor-mode.")
-
-(defface matlab-ts-mode-comment-to-do-marker-face
-  '((((class color) (background light))
-     :inherit font-lock-comment-face
-     :background "yellow"
-     :weight bold)
-    (((class color) (background dark))
-     :inherit font-lock-comment-face
-     :background "yellow4"
-     :weight bold))
-  ;; Note we split up the markers with spaces below so C-s when editing this file
-  ;; doesn't find them.
-  (concat "*Face use to highlight "
-          "TO" "DO," " FIX" "ME," " and XX" "X markers ignoring case in comments.
-Guidelines:
- - FIX" "ME" " and XX" "X markers should be fixed prior to committing
-   code to a source repository.
- - TO" "DO markers can remain in code and be committed with the code to a
-   source repository.  TO" "DO markers should reflect improvements are
-   not problems with the existing code."))
-
-(defface matlab-ts-mode-operator-face
-  '((((class color) (background light)) :foreground "navy")
-    (((class color) (background dark))  :foreground "LightBlue")
-    (t :inverse-video t
-       :weight bold))
-  "*Face for operators: *, /, +, -, etc.")
-
-(defface matlab-ts-mode-command-arg-face
-  '((t :inherit font-lock-string-face
-       :slant italic))
-  "*Face used to highlight command dual arguments.")
-
-(defface matlab-ts-mode-system-command-face
-  '((t :inherit font-lock-builtin-face
-       :slant italic))
-  "*Face used to highlight \"!\" system commands.")
-
-(defface matlab-ts-mode-property-face
-  '((t :inherit font-lock-property-name-face
-       :slant italic))
-  "*Face used on properties, enumerations, and events.")
-
-(defface matlab-ts-mode-number-face
-  '((t :inherit font-lock-constant-face))
-  "*Face used for numbers.")
-
-(defface matlab-ts-mode-end-number-face
-  '((t :inherit matlab-ts-mode-number-face
-       :slant italic))
-  "*Face used for \"end\" when used as an array or cell dimension number index.")
-
-(defface matlab-function-signature-face
-  '((t :inherit font-lock-type-face
-       :weight bold
-       :slant italic))
-  "*Face used for classdef abstract method function signature declarations.")
-
-(defface matlab-ts-mode-variable-override-builtin-face
-  '((t :inherit font-lock-variable-name-face
-       :underline t))
-  "*Face used for variable overriding a builtin.
-For example, it is valid to override the disp command:
-  disp = 1:10;
-and then trying to use disp to display results will not work.")
-
 (defcustom matlab-ts-mode-font-lock-level 3
   "*Level of font lock for MATLAB code.
 The \"Standard\" level plus either MLint flycheck or the MATLAB Language
 Server gives all syntactic faces along with error indicators.
 
 The \"Standard plus parse errors\" can result in too much use of the
-`font-lock-warning-face' when there are syntax errors."
+`font-lock-warning-face' when there are syntax errors and is thus
+not recommended."
   :type '(choice (const :tag "Minimal" 1)
                  (const :tag "Low" 2)
                  (const :tag "Standard" 3)
@@ -191,6 +111,112 @@ This will also add \"% \" for documentation comments.  For example,
      ^                  <== \"% \" is inserted and point is here
    end"
   :type 'boolean)
+
+(defgroup matlab-ts-faces nil
+  "Faces used by `matlab-ts-mode'."
+  :group 'matlab-ts)
+
+(defface matlab-ts-mode-pragma-face
+  '((t :inherit font-lock-comment-face
+       :bold t))
+  "*Face to use for comment lines which start with %#.
+These include lines like
+  %#ok          // pragmas used by the MATLAB Code Analyzer, mlint
+  %#function    // pragmas used by the MATLAB Compiler")
+
+(defface matlab-ts-mode-string-delimiter-face
+  '((t :inherit font-lock-string-face
+       :bold t))
+  "*Face to use for \\='single quote\\=' and \"double quote\" string delimiters.")
+
+(defface matlab-ts-mode-comment-heading-face
+  '((t :inherit font-lock-comment-face
+       :overline t
+       :bold t))
+  "*Face for \"%% code section\" headings.")
+
+(defface matlab-ts-mode-comment-to-do-marker-face
+  '((((class color) (background light))
+     :inherit font-lock-comment-face
+     :background "yellow"
+     :weight bold)
+    (((class color) (background dark))
+     :inherit font-lock-comment-face
+     :background "yellow4"
+     :weight bold))
+  ;; Note we split up the markers with spaces below so C-s when editing this file
+  ;; doesn't find them.
+  (concat "*Face use to highlight "
+          "TO" "DO," " FIX" "ME," " and XX" "X markers ignoring case in comments.
+Guidelines:
+ - FIX" "ME" " and XX" "X markers should be fixed prior to committing
+   code to a source repository.
+ - TO" "DO markers can remain in code and be committed with the code to a
+   source repository.  TO" "DO markers should reflect improvements are
+   not problems with the existing code."))
+
+(defface matlab-ts-mode-operator-face
+  '((((class color) (background light)) :foreground "navy")
+    (((class color) (background dark))  :foreground "LightBlue")
+    (t :inverse-video t
+       :weight bold))
+  "*Face for operators: *, /, +, -, etc.")
+
+(defface matlab-ts-mode-command-arg-face
+  '((t :inherit font-lock-string-face
+       :slant italic))
+  "*Face used to highlight command dual arguments.")
+
+(defface matlab-ts-mode-system-command-face
+  '((t :inherit font-lock-builtin-face
+       :slant italic))
+  "*Face used to highlight \"!\" system commands.")
+
+(defface matlab-ts-mode-property-face
+  '((t :inherit font-lock-property-name-face
+       :slant italic))
+  "*Face used on properties, enumerations, and events.")
+
+(defface matlab-ts-mode-number-face
+  '((t :inherit font-lock-constant-face))
+  "*Face used for numbers.")
+
+(defface matlab-ts-mode-end-number-face
+  '((t :inherit matlab-ts-mode-number-face
+       :slant italic))
+  "*Face used for \"end\" when used as an array or cell dimension number index.
+For example:
+  mat1 = [1:10;
+          2:2:20];
+  mat2 = mat1(2:end, end:end);")
+
+(defface matlab-function-signature-face
+  '((t :inherit font-lock-type-face
+       :weight bold
+       :slant italic))
+  "*Face used for classdef abstract method function signature declarations.
+In this example, fcn1 will get this face:
+  classdef MyClass
+      methods(Abstract)
+          a = fcn1(obj);
+      end
+  end")
+
+(defface matlab-ts-mode-variable-override-builtin-face
+  '((t :inherit font-lock-variable-name-face
+       :underline t))
+  "*Face used for variable overriding a builtin.
+For example, it is valid to override the disp command:
+  disp = 1:10;
+and then trying to use disp to display results will not work.")
+
+(defface matlab-ts-region-face
+  '((t :inherit region))
+  "*Face used to highlight a region of text when prompting for input.
+For example, if the function name and *.m file name are different
+the function name will be highlighted and you will see prompt
+   Function name and file names are different.  Fix?
+when saving.")
 
 ;;; Global variables used in multiple code ";;; sections"
 
@@ -255,7 +281,7 @@ logical last node is \"end\"."
          (last-idx (1- (length children)))
          (last-node (nth last-idx children)))
     (while (and (>= last-idx 0)
-                (string= (treesit-node-text last-node) "\n"))
+                (string= (treesit-node-type last-node) "\n"))
       (setq last-idx (1- last-idx))
       (setq last-node (nth last-idx children)))
     last-node))
@@ -1244,20 +1270,28 @@ is where we start looking for the error node."
       (re-search-backward "[^ \t\n\r]" nil t))
 
     ;; Move inside the error node if at an error node.
-    (when (string= (treesit-node-type (treesit-node-at (point))) "ERROR")
-      (re-search-backward "[^ \t\n\r]" nil t))
-
-    ;; If on a "[" or "{" move back (we don't want to shift the current line)
-    (when (string-match-p (rx bos (or "[" "{") eos) (treesit-node-type (treesit-node-at (point))))
-      (re-search-backward "[^ \t\n\r]" nil t))
+    (if (string= (treesit-node-type (treesit-node-at (point))) "ERROR")
+        (re-search-backward "[^ \t\n\r]" nil t)
+      ;; If on a "[" or "{" move back (we don't want to shift the current line)
+      (when (string-match-p (rx bos (or "[" "{") eos) (treesit-node-type (treesit-node-at (point))))
+        (re-search-backward "[^ \t\n\r]" nil t)))
 
     ;; Walk over line_continuation, ",", ";" and identify the "check node" we should be looking
     ;; at.
     (let ((check-node (treesit-node-at (point))))
-      (while (string-match-p (rx bos (or "line_continuation" "," ";") eos)
-                             (treesit-node-type check-node))
-        (goto-char (treesit-node-start check-node))
-        (if (re-search-backward "[^ \t\n\r]" nil t)
+      (while (let ((check-type (treesit-node-type check-node)))
+               (cond
+                ((string-match-p (rx bos (or "line_continuation" "," ";") eos) check-type)
+                 (goto-char (treesit-node-start check-node))
+                 (re-search-backward "[^ \t\n\r]" nil t)
+                 t)
+                ((and (string-match-p (rx bos "ERROR" eos) check-type)
+                      (looking-at ";" t))
+                 (goto-char (1- (point)))
+                 (when (looking-at "[ \t\n\r]" t)
+                   (re-search-backward "[^ \t\n\r]" nil t))
+                 t)))
+        (if (not (bobp))
             (let* ((pt (point))
                    (node-at-pt (treesit-node-at pt)))
               ;; Be robust to node-at-point range not covering pt
@@ -1362,7 +1396,7 @@ node."
   (cdr matlab-ts-mode-i-doc-comment-matcher-pair))
 
 (defun matlab-ts-mode--i-in-block-comment-matcher (node parent bol &rest _)
-  "Is NODE, PARENT, BOL within a block \"{% ... %)\"?"
+  "Is NODE, PARENT within a block \"{% ... %)\" and BOL does not start with \"%\"?"
   (and (not node)
        (string= "comment" (treesit-node-type parent))
        (not (save-excursion (goto-char bol)
@@ -2240,6 +2274,20 @@ Example:
   "Return the offset computed by `matlab-ts-mode--i-comment-under-fcn-matcher'."
   (cdr matlab-ts-mode--i-comment-under-fcn-pair))
 
+(defun matlab-ts-mode--i-top-level (node parent _bol &rest _)
+  "Is NODE with PARENT a top-level classdef, function, or code?"
+  (and node
+       (not (string-match-p (rx bos (or "line_continuation" "\n") eos)
+                            (treesit-node-type node)))
+       (equal (treesit-node-type parent) "source_file")))
+
+(defun matlab-ts-mode--column-0 (_node _parent bol &rest _)
+  "Return column-0 for BOL.
+Note treesit column-0 moves point, fixed in Emacs 31."
+  (save-excursion
+    (goto-char bol)
+    (line-beginning-position)))
+
 (defvar matlab-ts-mode--i-fcn-args-next-line-pair)
 
 (defun matlab-ts-mode--i-fcn-args-next-line-matcher (_node parent _bol &rest _)
@@ -2406,11 +2454,57 @@ Example:
   "Return anchor for `matlab-ts-mode--i-row-matcher'."
   matlab-ts-mode--i-row-anchor-value)
 
+(defvar matlab-ts-mode--i-ret-pair)
+
+(defun matlab-ts-mode--i-ret-matcher (node parent bol &rest _)
+  "Is NODE, PARENT, and BOL for RET on prior line indent matcher?"
+  (when (and (not node)
+             (string= "\n" (treesit-node-type parent)))
+    (let ((grand-parent (treesit-node-parent parent))
+          offset)
+      (when (string-match-p (rx bos (or "class_definition"
+                                        "properties"
+                                        "enumeration"
+                                        "methods"
+                                        "events"
+                                        "function_definition"
+                                        "arguments_statement"
+                                        "spmd_statement"
+                                        "try_statement"
+                                        "catch_clause"
+                                        "while_statement"
+                                        "for_statement"
+                                        "if_statement"
+                                        "else_clause"
+                                        "elseif_clause"))
+                            (treesit-node-type grand-parent))
+        (save-excursion
+          (goto-char bol)
+          (if (and (looking-at "^[ \t]*$")
+                   (re-search-backward "[^ \t\r\n]" nil t)
+                   (string= "end" (treesit-node-type (treesit-node-at (point)))))
+              (setq offset 0)
+            (setq offset matlab-ts-mode--indent-level)))
+
+
+        (setq matlab-ts-mode--i-ret-pair (cons (treesit-node-start grand-parent) offset))))))
+
+(defun matlab-ts-mode--i-ret-anchor (&rest _)
+  "Return anchor for `matlab-ts-mode--i-ret-matcher'."
+  (car matlab-ts-mode--i-ret-pair))
+
+(defun matlab-ts-mode--i-ret-offset (&rest _)
+  "Return anchor for `matlab-ts-mode--i-ret-matcher'."
+  (cdr matlab-ts-mode--i-ret-pair))
+
 (defvar matlab-ts-mode--indent-rules
   `((matlab
 
      ;; I-Rule: last line of code block comment "%{ ... %}"?
      (,#'matlab-ts-mode--i-block-comment-end-matcher parent 0)
+
+     ;; I-Rule: within a code block comment "%{ ... %}"?
+     (,#'matlab-ts-mode--i-in-block-comment-matcher parent 2)
 
      ;; I-Rule: RET on an incomplete statement. Example:
      ;;         classdef foo
@@ -2428,15 +2522,8 @@ Example:
       ,#'matlab-ts-mode--i-comment-under-fcn-offset)
 
      ;; I-Rule: classdef's, function's, or code for a script that is at the top-level
-     ((lambda (node parent _bol &rest _)
-        (and node
-             (not (string= (treesit-node-type node) "line_continuation"))
-             (equal (treesit-node-type parent) "source_file")))
-      ;; column-0 moves point, fixed in emacs 31
-      (lambda (_node _parent bol &rest _)
-        (save-excursion
-          (goto-char bol)
-          (line-beginning-position)))
+     (,#'matlab-ts-mode--i-top-level
+      ,#'matlab-ts-mode--column-0
       0)
 
      ;; I-Rule: within a function/classdef doc block comment "%{ ... %}"?
@@ -2446,9 +2533,6 @@ Example:
      (,#'matlab-ts-mode--i-doc-comment-matcher
       ,#'matlab-ts-mode--i-doc-comment-anchor
       ,#'matlab-ts-mode--i-doc-comment-offset)
-
-     ;; I-Rule: within a code block comment "%{ ... %}"?
-     (,#'matlab-ts-mode--i-in-block-comment-matcher parent 2)
 
      ;; I-Rule: switch case and otherwise statements
      ((node-is ,(rx bos (or "case_clause" "otherwise_clause") eos))
@@ -2541,22 +2625,9 @@ Example:
      ;;             ^             <== TAB or RET on prior line
      ;;         end
      ;; See: tests/test-matlab-ts-mode-indent-xr-files/indent_xr_statement_body.m
-     ((n-p-gp nil ,(rx bos "\n" eos)
-              ,(rx bos (or "class_definition"
-                           "properties"
-                           "enumeration"
-                           "methods"
-                           "events"
-                           "function_definition"
-                           "arguments_statement"
-                           "spmd_statement"
-                           "try_statement"
-                           "catch_clause"
-                           "while_statement"
-                           "for_statement"
-                           "if_statement" "else_clause" "elseif_clause")
-                   eos))
-      grand-parent ,matlab-ts-mode--indent-level)
+     (,#'matlab-ts-mode--i-ret-matcher
+      ,#'matlab-ts-mode--i-ret-anchor
+      ,#'matlab-ts-mode--i-ret-offset)
 
      ;; I-Rule: grandparent is block
      ;;      for i=1:10
@@ -2945,10 +3016,16 @@ function call."
 ;; matlab-ts-mode--thing-settings used for:
 ;;   C-M-a  - M-x beginning-of-defun
 ;;   C-M-e  - M-x end-of-defun
+;;
 ;;   C-M-b  - M-x backward-sexp
 ;;   C-M-f  - M-x forward-sexp
-;;   M-e    - M-x forward-sentence
+;;   C-M-t  - M-x transpose-sexps (transpose right sexp with left sexp)
+;;   C-M-k  - M-x kill-sexp
+;;
 ;;   M-a    - M-x backward-sentence
+;;   M-e    - M-x forward-sentence
+;;   M-k    - M-x kill-sentence (kill from point to end of sentence)
+;;
 ;;   C-M-u  - M-x backward-up-list
 ;;
 (defvar matlab-ts-mode--thing-settings
@@ -3221,7 +3298,7 @@ Returns t if tree-sitter NODE defines an outline heading."
         ans)
     (condition-case nil
         (progn
-          (overlay-put mo 'face 'matlab-region-face)
+          (overlay-put mo 'face 'matlab-ts-region-face)
           (setq ans (y-or-n-p prompt))
           (delete-overlay mo))
       (quit (delete-overlay mo)
@@ -3829,7 +3906,7 @@ provided."
 ;; so the mode line indicator, "matlab-ts-parse-errors" is slightly shorter
 
 (define-compilation-mode matlab-ts-parse-errors-mode "m-ts-parse-errors"
-                         "Variant of `compilation-mode' used for `matlab-ts-view-parse-errors'.")
+  "Variant of `compilation-mode' used for `matlab-ts-view-parse-errors'.")
 
 (defun matlab-ts-view-parse-errors (&optional no-pop-to-buffer)
   "View parse errors in matlab-ts-mode current buffer.
@@ -3870,6 +3947,170 @@ and this buffer is returned."
       (when (not no-pop-to-buffer)
         (pop-to-buffer (current-buffer) 'other-window)))
     parse-errors-buf))
+
+(defun matlab-ts--face-section (heading)
+  "Insert stylized section HEADING into current buffer."
+  (insert "\n" (propertize (concat "[" heading "]") 'face 'custom-group-tag) "\n"))
+
+(defun matlab-ts--face-button (face sample &optional extra-doc)
+  "Insert FACE doc in current buffer and make it a button.
+SAMPLE is text that is inserted with FACE property.
+EXTRA-DOC is extra doc info to add to the face documentation."
+
+  (let ((face-str (symbol-name face))
+        (face-doc (replace-regexp-in-string (rx bos "*") "" (face-documentation face))))
+
+    (insert "\n")
+
+    (insert "* ")
+    (insert-text-button face-str 'action (lambda (_button)
+                                           (customize-face face)))
+    (insert "\n")
+
+    (insert "  " (mapconcat #'identity (split-string face-doc "\n") "\n  "))
+    (insert "\n")
+    (when extra-doc
+      (insert "  " (mapconcat #'identity (split-string extra-doc "\n") "\n  "))
+      (insert "\n"))
+
+    (insert "  Sample:\n")
+    (insert "    " (propertize
+                    (mapconcat #'identity (split-string (string-trim sample) "\n") "\n    ")
+                    'face face))
+    (insert "\n")))
+
+(defun matlab-ts-describe-faces ()
+  "Describe the faces used by matlab-ts-mode."
+  (interactive)
+  (with-help-window "*matlab-ts-mode faces*"
+    (with-current-buffer "*matlab-ts-mode faces*"
+      (setq-local revert-buffer-function (lambda (&rest _)))
+
+      (insert "The following faces are used by matlab-ts-mode when displaying code.
+A face includes the font, style, color, etc.\n")
+
+      (matlab-ts--face-section "Comments")
+      (matlab-ts--face-button 'font-lock-doc-face
+                              "% documentation comment for function's and classdef's\n")
+      (matlab-ts--face-button 'font-lock-comment-face
+                              "% a single line comment\n")
+      (matlab-ts--face-button 'matlab-ts-mode-pragma-face
+                              (concat "%#ok<*AGROW>\n"
+                                      "%#function myFcn\n"))
+      (matlab-ts--face-button 'matlab-ts-mode-comment-to-do-marker-face
+                              (mapconcat #'identity matlab-ts-mode--comment-markers " "))
+
+      (matlab-ts--face-section "Sections")
+      (matlab-ts--face-button 'matlab-ts-mode-comment-heading-face
+                              "%% My Code Section\n")
+      (matlab-ts--face-button 'matlab-sections-highlight-face
+                              "code\n")
+
+      (matlab-ts--face-section "Operators")
+      (matlab-ts--face-button 'matlab-ts-mode-operator-face
+                              "* / + -\n")
+
+      (matlab-ts--face-section "Brackets")
+      (matlab-ts--face-button 'font-lock-bracket-face
+                              "( ) [ ] { }\n")
+
+      (matlab-ts--face-section "Delimiters")
+      (matlab-ts--face-button 'font-lock-delimiter-face
+                              ". , : ;\n")
+
+      (matlab-ts--face-section "Strings")
+      (matlab-ts--face-button 'font-lock-string-face
+                              "string")
+      (matlab-ts--face-button 'matlab-ts-mode-string-delimiter-face
+                              "\" \\'")
+      (matlab-ts--face-button 'font-lock-escape-face
+                              "\\n \\t %d %f %g\n"
+                              (concat "This includes escape sequences (\\n, etc.) and fprintf "
+                                      "format specs (%d, etc.) within strings."))
+
+      (matlab-ts--face-section "Functions")
+      (matlab-ts--face-button 'font-lock-function-name-face
+                              "myFunction"
+                              (concat "Face used in function definitions.\n"
+                                      "For example myFunction will get this face:\n"
+                                      "    function out1 = myFunction(in1)\n"
+                                      "        out1 = in1 * 2;\n"
+                                      "    end\n"))
+      (matlab-ts--face-button 'font-lock-function-call-face
+                              "myFunction"
+                              (concat "\n"
+                                      "For example myFunction will get this face:\n"
+                                      "    x = myFunction(4);\n"
+                                      "This is used for both functions and matrices because\n"
+                                      "id1(2) can refer to either a function named id1 or\n"
+                                      "a matrix named id1.\n"))
+      (matlab-ts--face-button 'matlab-function-signature-face
+                              "fcn1")
+
+      (matlab-ts--face-section "Command Dual")
+      (matlab-ts--face-button 'matlab-ts-mode-command-arg-face
+                              "argument")
+
+      (matlab-ts--face-section "System Command")
+      (matlab-ts--face-button 'matlab-ts-mode-system-command-face
+                              "! ls *.m *.txt")
+
+      (matlab-ts--face-section "Builtins")
+
+      (matlab-ts--face-button 'font-lock-builtin-face
+                              "disp"
+                              (concat "This includes any builtin identifier, function, etc.\n"
+                                      "provided by MATLAB and add-on products"))
+
+      (matlab-ts--face-section "Classdef")
+      (matlab-ts--face-button 'matlab-ts-mode-property-face
+                              "prop1")
+
+      (matlab-ts--face-section "Variables")
+      (matlab-ts--face-button 'matlab-ts-mode-variable-override-builtin-face
+                              "disp")
+
+      (matlab-ts--face-button 'font-lock-variable-name-face
+                              "var1"
+                              (concat "Face used in variable assignment, function inputs, and "
+                                      "function outputs\n"
+                                      "Example: this face will be used on var1 in: var1 = 1;\n"
+                                      "Example: this face will be used on in1 and out1 in: "
+                                      " function out1 = fcnName(in1)"))
+
+      (matlab-ts--face-section "Keywords")
+      (matlab-ts--face-button 'font-lock-keyword-face
+                              "if else elseif end")
+
+      (matlab-ts--face-section "Code")
+      (matlab-ts--face-button 'default
+                              "sample"
+                              (concat "Face used in code\n"
+                                      "Example: this face will be used on thing1 and thing2 in: "
+                                      "x = thing1 + thing2;\n"
+                                      "where thing1 or thing2 can be variables or functions"))
+
+      (matlab-ts--face-section "Type Functions")
+      (matlab-ts--face-button 'font-lock-type-face
+                              "int8 int16")
+
+      (matlab-ts--face-section "Numbers")
+      (matlab-ts--face-button 'matlab-ts-mode-number-face
+                              "1234")
+      (matlab-ts--face-button 'matlab-ts-mode-end-number-face
+                              "end")
+
+      (matlab-ts--face-section "Prompting")
+      (matlab-ts--face-button 'matlab-ts-region-face
+                              "myFunction")
+
+      (matlab-ts--face-section "Syntax Errors")
+      (matlab-ts--face-button 'font-lock-warning-face
+                              "a*/*b"
+                              (concat "Used when `matlab-ts-mode-font-lock-level' is set to "
+                                      "show syntax errors"))
+
+      )))
 
 ;;; Our M-q matlab-ts-mode-prog-fill-reindent-defun
 
@@ -4088,6 +4329,8 @@ See `comment-dwim' for more capabilities."]
 
     "----"
     ["Check setup" matlab-ts-mode-check-setup]
+    ["Describe faces" matlab-ts-describe-faces
+     :help "Describe faces (color, font, etc.) used by matlab-ts-mode."]
     ("Customize"
      ["Customize matlab-ts-mode" (lambda ()
                                    (interactive)
@@ -4343,4 +4586,4 @@ matlab-language-server-lsp-mode.org\n"
 ;; LocalWords:  funcall mfile elec foo'bar mapcar lsp noerror alnum featurep grep'ing mapconcat wie
 ;; LocalWords:  Keymap keymap netshell gud ebstop mlgud ebclear ebstatus mlg mlgud's subjob reindent
 ;; LocalWords:  DWIM dwim parens caar cdar utils fooenum mcode CRLF cmddual lang nconc listify kbd
-;; LocalWords:  matlabls vscode buf dolist sp ppss
+;; LocalWords:  matlabls vscode buf dolist sp ppss bobp sexps pragmas
