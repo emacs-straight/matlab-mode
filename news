@@ -1,0 +1,173 @@
+1 Release 8.0.0 Jan-29-2026
+═══════════════════════════
+
+  This release updates matlab-ts-mode indent to /electric indent
+  code/. This is sometimes called pretty printing code or formatting
+  code.
+
+  To indent a MATLAB `*.m' file,
+
+  ┌────
+  │ C-x h           or  M-: (mark-whole-buffer)
+  │ C-M-\           or  M-x indent-region
+  └────
+
+
+  See [doc/matlab-code-indent.org - MATLAB Indent (Code Format)]
+
+
+[doc/matlab-code-indent.org - MATLAB Indent (Code Format)]
+<file:doc/matlab-code-indent.org>
+
+
+2 Release 7.4.2 Dec 29, 2025
+════════════════════════════
+
+  Fix bug in tramp (remote) matlab-shell when matlab is installed in a
+  custom location.
+
+
+3 Release 7.4.1 Nov 26, 2025
+════════════════════════════
+
+  1. Fix indent bug. In following typing RET after the argument end
+     statement, the indent now goes to the 4th column and not the 8th
+     column:
+
+     ┌────
+     │ function test(A)
+     │     arguments
+     │         A
+     │     end
+     │ end
+     └────
+
+
+4 Release 7.4.0 Nov 26, 2025
+════════════════════════════
+
+  1. Place the `matlab-*-face' definitions in customize matlab-ts-faces
+     group.
+
+  2. Add `M-x matlab-ts-describe-faces' along with menu item
+
+     ┌────
+     │ MATLAB -> Describe faces
+     └────
+
+
+     that will bring up a help buffer containing the faces used by
+     matlab-ts-mode.  From there you can customize them. This differs
+     from viewing the matlab-ts-faces group in that it contains both
+     matlab-*-faces plus other built-in faces such as
+     font-lock-type-face. This help buffer also contain more information
+     on when the faces are used.
+
+
+5 Release 7.3.4 Nov 25, 2025
+════════════════════════════
+
+  1. Add the source and build instructions for the
+     libtree-sitter-matlab.SLIB_EXT binaries found in [./matlab-ts-bin]
+     and used by `M-x matlab-ts-grammar-install'.
+
+
+[./matlab-ts-bin] <file:matlab-ts-bin>
+
+
+6 Release 7.3.3 Nov 23, 2025
+════════════════════════════
+
+  1. Update to latest
+     <https://github.com/acristoffers/tree-sitter-matlab> which improves
+     matlab-ts-mode: matlab-ts-abi14-20251122-90ce9da
+
+
+7 Release 7.3.2 Nov 21, 2025
+════════════════════════════
+
+  1. Update to latest
+     <https://github.com/acristoffers/tree-sitter-matlab> which improves
+     matlab-ts-mode.  The changes fix parsing errors up through issues
+     141 in matlab tree-sitter.
+
+
+8 Release 7.3.1 Nov 14, 2025
+════════════════════════════
+
+  1. Fixed M-q (fill-paragraph) in comments when there no space after
+     the '%' character.
+
+  2. Improved t-utils-view-parse-tree
+
+  3. Made matlab-ts-mode show-paren-mode robust to extra `\n' nodes
+
+
+9 Release 7.3.0 Nov 12, 2025
+════════════════════════════
+
+  1. Updated matlab-ts-mode to work with tree-sitter-matlab commit
+     9d16fcf. This fixes many known issues in matlab-ts-mode.
+
+  2. Simplified the install of the matlab tree-sitter grammar shared
+     libraries. To enable *matlab-ts-mode* you install `matlab-mode' and
+     then `M-x matlab-ts-grammar-install'.
+
+
+10 Release 7.2.1 Oct 30, 2025
+═════════════════════════════
+
+  1. In matlab-ts-mode, fix indent involving catch clause with a
+     comment.
+
+
+11 Release 7.2.0 Oct 29, 2025
+═════════════════════════════
+
+  1. Updated matlab-ts-mode to use latest matlab tree-sitter v1.2.3
+     branch [abi/14] at [9a4e65d]. This fixes parse on a number of
+     MATLAB language constructs, which is visible behavior improvements,
+     so bumping revision to 7.2.0.
+
+  2. In matlab-ts-mode, don't offer to fix function/classdef names when
+     there are syntax errors because this can lead to changing the name
+     of other identifiers and not the function/classdef name.
+
+
+[abi/14]
+<https://github.com/acristoffers/tree-sitter-matlab/tree/abi/14>
+
+[9a4e65d]
+<https://github.com/acristoffers/tree-sitter-matlab/tree/9a4e65df4bb08e2b019ca2ef16b2d8f3d95ce978>
+
+
+12 Release 7.1.2 Oct 16, 2025
+═════════════════════════════
+
+  1. matlab-is-matlab-file: This function identifies when the content of
+     a *.m file is MATLAB code, if it's not MATLAB code, Emacs defaults
+     to Objective-C. This fixes a case where a *.m contains MATLAB code
+     and the first line is a @function_handle.
+
+
+13 Release 7.1.1 Oct 1, 2025
+════════════════════════════
+
+  1. matlab-ts-mode: fix semantic movement in strings. Now C-M-f, C-M-b,
+     C-M-SPC work when point is within strings.
+
+
+14 Release 7.1.0 Sep 29, 2025
+═════════════════════════════
+
+  1. Improved matlab-ts-mode imenu. The imenu index now creates indices
+     for code sections defined by "%% heading comments". In addition,
+     the menu was updated to have structure:
+
+     • Class
+     • Function
+     • Section
+
+     Previously, imenu was a flat list without code sections index
+     entries.
+  …  …
