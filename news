@@ -1,4 +1,12 @@
-1 Release 8.0.0 Jan-29-2026
+1 Release 8.0.1 Jan-30-2026
+═══════════════════════════
+
+  Minor /electric indent/ fix to correct comma placement in struct field
+  alignment and also to fix non-positional name = value arguments and
+  attributes.
+
+
+2 Release 8.0.0 Jan-29-2026
 ═══════════════════════════
 
   This release updates matlab-ts-mode indent to /electric indent
@@ -20,14 +28,14 @@
 <file:doc/matlab-code-indent.org>
 
 
-2 Release 7.4.2 Dec 29, 2025
+3 Release 7.4.2 Dec 29, 2025
 ════════════════════════════
 
   Fix bug in tramp (remote) matlab-shell when matlab is installed in a
   custom location.
 
 
-3 Release 7.4.1 Nov 26, 2025
+4 Release 7.4.1 Nov 26, 2025
 ════════════════════════════
 
   1. Fix indent bug. In following typing RET after the argument end
@@ -43,7 +51,7 @@
      └────
 
 
-4 Release 7.4.0 Nov 26, 2025
+5 Release 7.4.0 Nov 26, 2025
 ════════════════════════════
 
   1. Place the `matlab-*-face' definitions in customize matlab-ts-faces
@@ -64,7 +72,7 @@
      on when the faces are used.
 
 
-5 Release 7.3.4 Nov 25, 2025
+6 Release 7.3.4 Nov 25, 2025
 ════════════════════════════
 
   1. Add the source and build instructions for the
@@ -75,7 +83,7 @@
 [./matlab-ts-bin] <file:matlab-ts-bin>
 
 
-6 Release 7.3.3 Nov 23, 2025
+7 Release 7.3.3 Nov 23, 2025
 ════════════════════════════
 
   1. Update to latest
@@ -83,7 +91,7 @@
      matlab-ts-mode: matlab-ts-abi14-20251122-90ce9da
 
 
-7 Release 7.3.2 Nov 21, 2025
+8 Release 7.3.2 Nov 21, 2025
 ════════════════════════════
 
   1. Update to latest
@@ -92,7 +100,7 @@
      141 in matlab tree-sitter.
 
 
-8 Release 7.3.1 Nov 14, 2025
+9 Release 7.3.1 Nov 14, 2025
 ════════════════════════════
 
   1. Fixed M-q (fill-paragraph) in comments when there no space after
@@ -103,8 +111,8 @@
   3. Made matlab-ts-mode show-paren-mode robust to extra `\n' nodes
 
 
-9 Release 7.3.0 Nov 12, 2025
-════════════════════════════
+10 Release 7.3.0 Nov 12, 2025
+═════════════════════════════
 
   1. Updated matlab-ts-mode to work with tree-sitter-matlab commit
      9d16fcf. This fixes many known issues in matlab-ts-mode.
@@ -114,14 +122,14 @@
      then `M-x matlab-ts-grammar-install'.
 
 
-10 Release 7.2.1 Oct 30, 2025
+11 Release 7.2.1 Oct 30, 2025
 ═════════════════════════════
 
   1. In matlab-ts-mode, fix indent involving catch clause with a
      comment.
 
 
-11 Release 7.2.0 Oct 29, 2025
+12 Release 7.2.0 Oct 29, 2025
 ═════════════════════════════
 
   1. Updated matlab-ts-mode to use latest matlab tree-sitter v1.2.3
@@ -141,7 +149,7 @@
 <https://github.com/acristoffers/tree-sitter-matlab/tree/9a4e65df4bb08e2b019ca2ef16b2d8f3d95ce978>
 
 
-12 Release 7.1.2 Oct 16, 2025
+13 Release 7.1.2 Oct 16, 2025
 ═════════════════════════════
 
   1. matlab-is-matlab-file: This function identifies when the content of
@@ -150,24 +158,16 @@
      and the first line is a @function_handle.
 
 
-13 Release 7.1.1 Oct 1, 2025
+14 Release 7.1.1 Oct 1, 2025
 ════════════════════════════
 
   1. matlab-ts-mode: fix semantic movement in strings. Now C-M-f, C-M-b,
      C-M-SPC work when point is within strings.
 
 
-14 Release 7.1.0 Sep 29, 2025
+15 Release 7.1.0 Sep 29, 2025
 ═════════════════════════════
 
   1. Improved matlab-ts-mode imenu. The imenu index now creates indices
-     for code sections defined by "%% heading comments". In addition,
-     the menu was updated to have structure:
-
-     • Class
-     • Function
-     • Section
-
-     Previously, imenu was a flat list without code sections index
-     entries.
+     for code sections defined by
   …  …

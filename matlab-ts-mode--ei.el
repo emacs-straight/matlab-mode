@@ -1,6 +1,6 @@
 ;;; matlab-ts-mode--ei.el --- MATLAB electric indent -*- lexical-binding: t -*-
 
-;; Version: 8.0.0
+;; Version: 8.0.1
 ;; URL: https://github.com/mathworks/Emacs-MATLAB-Mode
 ;; SPDX-License-Identifier: GPL-3.0-or-later
 ;;
@@ -137,11 +137,6 @@
 
     (,(rx bos (or "," ";" "command_argument" "command_name" "enum-id") eos)  "."                 1)
 
-    ;; Case arguments name=value syntax, the "=" node is converted to "n=v"
-    ;; TopTester: electric_indent_name_value_args.m
-    ("."                             ,(rx bos "n=v" eos)                                         0)
-    (,(rx bos "n=v" eos)             "."                                                         0)
-
     (,matlab-ts-mode--ei-0-after-re   "."                                                        0)
 
     (,(rx bos "]" eos)                ,(rx bos (or "," ";") eos)                                 0)
@@ -239,13 +234,6 @@ be unary-op even though the node type is \"+\"."
      ((string= parent-type "string")
       (setq node parent
             node-type parent-type))
-
-     ;; Case: name=value argument pair
-     ((and (string= node-type "=")
-           (or (string= parent-type "arguments")
-               (string= parent-type "attribute")))
-      ;; arguments name=value
-      (setq node-type "n=v"))
 
      ;; Case: prop-id, prop-class-id, enum-id
      ((string= node-type "identifier")
@@ -1176,23 +1164,24 @@ See `matlab-ts-mode--ei-get-new-line' for EI-INFO."
                       (match-string 0 ei-line))))
           (when (or (not arg) (string-match-p (rx bos "...") arg)) ;; skip continuations
             (cl-return-from matlab-ts-mode--ei-align-line-in-m-struct ei-info))
-          (setq comma-offset (string-match-p "," ei-line open-paren-offset)
+          (setq comma-offset (1+ (string-match-p "," ei-line open-paren-offset))
                 new-comma-offset (+ 1 open-paren-offset max-field-width)))
       ;; Else on later line
       (when (string-match-p (rx bos (0+ (or " " "\t")) "...") ei-line) ;; skip continuations
         (cl-return-from matlab-ts-mode--ei-align-line-in-m-struct ei-info))
-      (setq comma-offset (string-match-p "," ei-line)
-            new-comma-offset (+ (string-match-p "[^ \t]" ei-line) max-field-width))
+      (setq comma-offset (string-match-p "," ei-line))
       (when (not comma-offset) ;; Ending ");" by itself on a line
         ;; TopTester: electric_indent_struct_in_prop2.m
         (cl-return-from matlab-ts-mode--ei-align-line-in-m-struct ei-info))
+      (setq comma-offset (1+ comma-offset) ;; point after the ","
+            new-comma-offset (+ (string-match-p "[^ \t]" ei-line) max-field-width))
       (let ((first-node-in-line (nth 3 ei-info))
             (arguments-node (nth 2 tuple)))
         (when (not (equal (treesit-node-parent first-node-in-line) arguments-node))
           ;; TopTester: electric_indent_struct_with_multiline_field_values.m
           (cl-return-from matlab-ts-mode--ei-align-line-in-m-struct ei-info))))
 
-    (let ((n-spaces-to-add (- new-comma-offset comma-offset)))
+    (let ((n-spaces-to-add (1+ (- new-comma-offset comma-offset))))
       (when (not (= n-spaces-to-add 0))
         (setq ei-line (concat (substring ei-line 0 comma-offset)
                               (make-string n-spaces-to-add ? )
