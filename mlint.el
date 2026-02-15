@@ -33,6 +33,7 @@
 (require 'matlab)
 (require 'matlab--access)
 
+(require 'eieio-base)
 (require 'linemark)
 
 (eval-when-compile
@@ -171,7 +172,7 @@ Argument STRING is the text to interpret."
 
           (setq default-directory dd)
 
-          (apply 'call-process buffer-mlint-program nil (current-buffer) nil
+          (apply #'call-process buffer-mlint-program nil (current-buffer) nil
                  (append flags (list fn)))
 
           (when mlint-verbose (message "Running mlint...done"))
@@ -287,7 +288,7 @@ Warning ID's won't change between releases, unlike the warning messages.")
   "Create a group object for tracking linemark entries.
 Do not permit multiple groups with the same name."
   (let* ((name "mlint")
-         (newgroup (mlint-lm-group name :face 'linemark-go-face))
+         (newgroup (mlint-lm-group :face 'linemark-go-face))
          (foundgroup nil)
          (lmg linemark-groups))
     (while (and (not foundgroup) lmg)
@@ -345,7 +346,7 @@ ACTIVE-P if it should be made visible."
   ;; A bug in linemark prevents individual entry colors.
   ;; Fix the color here.
   (let ((wc (oref e warningcode)))
-    (oset e :face
+    (oset e face
           (cond ((eq wc 'major) 'linemark-stop-face)
                 ((eq wc 'medium) 'linemark-caution-face)
                 (t 'linemark-go-face))))
@@ -769,15 +770,15 @@ Highlight problems and/or cross-function variables."
 ;;
 (defvar mlint-minor-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map "\C-c,n" 'mlint-next-buffer)
-    (define-key map "\C-c,p" 'mlint-prev-buffer)
-    (define-key map "\C-c,N" 'mlint-next-buffer-new)
-    (define-key map "\C-c,P" 'mlint-prev-buffer-new)
-    (define-key map "\C-c,g" 'mlint-buffer)
-    (define-key map "\C-c,c" 'mlint-clear-warnings)
-    (define-key map "\C-c, " 'mlint-show-warning)
-    (define-key map "\C-c,f" 'mlint-fix-warning)
-    (define-key map "\C-c,o" 'mlint-mark-ok)
+    (define-key map "\C-c,n" #'mlint-next-buffer)
+    (define-key map "\C-c,p" #'mlint-prev-buffer)
+    (define-key map "\C-c,N" #'mlint-next-buffer-new)
+    (define-key map "\C-c,P" #'mlint-prev-buffer-new)
+    (define-key map "\C-c,g" #'mlint-buffer)
+    (define-key map "\C-c,c" #'mlint-clear-warnings)
+    (define-key map "\C-c, " #'mlint-show-warning)
+    (define-key map "\C-c,f" #'mlint-fix-warning)
+    (define-key map "\C-c,o" #'mlint-mark-ok)
     map)
   "Minor mode keymap used when mlinting a buffer.")
 
@@ -804,11 +805,12 @@ Highlight problems and/or cross-function variables."
 
 (defvar mlint-overlay-map
   (let ((map (make-sparse-keymap )))
-    (define-key map [down-mouse-3] 'mlint-emacs-popup-kludge)
-    (define-key map [(meta n)] 'mlint-next-buffer)
-    (define-key map [(meta p)] 'mlint-prev-buffer)
-    (define-key map [(control meta n)] 'mlint-next-buffer-new)
-    (define-key map [(control meta p)] 'mlint-prev-buffer-new)
+    ;; FIXME: Use `context-menu-functions' instead?
+    (define-key map [down-mouse-3] #'mlint-emacs-popup-kludge)
+    (define-key map [(meta n)] #'mlint-next-buffer)
+    (define-key map [(meta p)] #'mlint-prev-buffer)
+    (define-key map [(control meta n)] #'mlint-next-buffer-new)
+    (define-key map [(control meta p)] #'mlint-prev-buffer-new)
     (set-keymap-parent map matlab-mode-map)
     map)
   "Map used in overlays marking mlint warnings.")
@@ -844,7 +846,7 @@ With prefix ARG, turn mlint minor mode on iff ARG is positive.
       (progn
         (mlint-clear-nested-function-info-overlays)
         (mlint-clear-warnings)
-        (remove-hook 'after-save-hook 'mlint-buffer t))
+        (remove-hook 'after-save-hook #'mlint-buffer t))
 
     ;; activate mlint if possible
     (if mlint-program-selection-fcn
@@ -854,12 +856,14 @@ With prefix ARG, turn mlint minor mode on iff ARG is positive.
       ;; else use global mlint-program for all *.m files
       (when (not mlint-program)
         (setq mlint-program (matlab--get-mlint-exe))
-        (when (y-or-n-p "No MLINT program available.  Configure it? ")
+        (when (and (not mlint-program)
+                   (y-or-n-p "No MLINT program available.  Configure it? "))
           (customize-variable 'mlint-programs))))
 
     (if mlint-program
         (progn
-          (add-hook 'after-save-hook 'mlint-buffer nil t)
+          (setq matlab-show-mlint-warnings t)
+          (add-hook 'after-save-hook #'mlint-buffer nil t)
           (mlint-buffer))
       ;; Remove the mlint menu. set mlint-minor-mode variable to nil, disable mlint keybindings
       (mlint-minor-mode -1))))
@@ -877,7 +881,7 @@ That buffer will be current."
     (mlint-minor-mode -1)
     ))
 
-(add-hook 'ediff-prepare-buffer-hook 'mlint-ediff-metabuffer-setup-hook)
+(add-hook 'ediff-prepare-buffer-hook #'mlint-ediff-metabuffer-setup-hook)
 
 (defun mlint-ediff-cleanup-hook ()
   "Re-enable mlint for buffers being ediffed.
@@ -892,7 +896,7 @@ find it."
                 (setq mlint-minor-mode-was-enabled-before nil))))
           (buffer-list)))
 
-(add-hook 'ediff-cleanup-hook 'mlint-ediff-cleanup-hook)
+(add-hook 'ediff-cleanup-hook #'mlint-ediff-cleanup-hook)
 
 (provide 'mlint)
 ;;; mlint.el ends here
