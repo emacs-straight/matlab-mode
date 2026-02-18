@@ -1,4 +1,12 @@
-1 Release 8.0.4 Feb-7-2026
+1 Release 8.0.5 Feb-14-2026
+═══════════════════════════
+
+  This release fixes a build issue when using matlab-mode with Emacs
+  that doesn't have tree-sitter. In addition, several lisp cleanups were
+  performed (no behavior changes).
+
+
+2 Release 8.0.4 Feb-7-2026
 ══════════════════════════
 
   This release fixes a minor issue when using matlab-ts-mode with point
@@ -21,7 +29,7 @@
   └────
 
 
-2 Release 8.0.3 Feb-5-2026
+3 Release 8.0.3 Feb-5-2026
 ══════════════════════════
 
   This release updates to the latest tree-sitter-matlab grammar which
@@ -29,7 +37,7 @@
   font-lock.
 
 
-3 Release 8.0.2 Jan-31-2026
+4 Release 8.0.2 Jan-31-2026
 ═══════════════════════════
 
   This release:
@@ -47,7 +55,7 @@
   2. Updates to tree-sitter-matlab grammar from 2026-01-31.
 
 
-4 Release 8.0.1 Jan-30-2026
+5 Release 8.0.1 Jan-30-2026
 ═══════════════════════════
 
   Minor /electric indent/ fix to correct comma placement in struct field
@@ -55,7 +63,7 @@
   attributes.
 
 
-5 Release 8.0.0 Jan-29-2026
+6 Release 8.0.0 Jan-29-2026
 ═══════════════════════════
 
   This release updates matlab-ts-mode indent to /electric indent
@@ -77,14 +85,14 @@
 <file:doc/matlab-code-indent.org>
 
 
-6 Release 7.4.2 Dec 29, 2025
+7 Release 7.4.2 Dec 29, 2025
 ════════════════════════════
 
   Fix bug in tramp (remote) matlab-shell when matlab is installed in a
   custom location.
 
 
-7 Release 7.4.1 Nov 26, 2025
+8 Release 7.4.1 Nov 26, 2025
 ════════════════════════════
 
   1. Fix indent bug. In following typing RET after the argument end
@@ -100,7 +108,7 @@
      └────
 
 
-8 Release 7.4.0 Nov 26, 2025
+9 Release 7.4.0 Nov 26, 2025
 ════════════════════════════
 
   1. Place the `matlab-*-face' definitions in customize matlab-ts-faces
@@ -121,8 +129,8 @@
      on when the faces are used.
 
 
-9 Release 7.3.4 Nov 25, 2025
-════════════════════════════
+10 Release 7.3.4 Nov 25, 2025
+═════════════════════════════
 
   1. Add the source and build instructions for the
      libtree-sitter-matlab.SLIB_EXT binaries found in [./matlab-ts-bin]
@@ -132,7 +140,7 @@
 [./matlab-ts-bin] <file:matlab-ts-bin>
 
 
-10 Release 7.3.3 Nov 23, 2025
+11 Release 7.3.3 Nov 23, 2025
 ═════════════════════════════
 
   1. Update to latest
@@ -140,7 +148,7 @@
      matlab-ts-mode: matlab-ts-abi14-20251122-90ce9da
 
 
-11 Release 7.3.2 Nov 21, 2025
+12 Release 7.3.2 Nov 21, 2025
 ═════════════════════════════
 
   1. Update to latest
@@ -149,7 +157,7 @@
      141 in matlab tree-sitter.
 
 
-12 Release 7.3.1 Nov 14, 2025
+13 Release 7.3.1 Nov 14, 2025
 ═════════════════════════════
 
   1. Fixed M-q (fill-paragraph) in comments when there no space after
@@ -160,13 +168,9 @@
   3. Made matlab-ts-mode show-paren-mode robust to extra `\n' nodes
 
 
-13 Release 7.3.0 Nov 12, 2025
+14 Release 7.3.0 Nov 12, 2025
 ═════════════════════════════
 
   1. Updated matlab-ts-mode to work with tree-sitter-matlab commit
      9d16fcf. This fixes many known issues in matlab-ts-mode.
-
-  2. Simplified the install of the matlab tree-sitter grammar shared
-     libraries. To enable *matlab-ts-mode* you install `matlab-mode' and
-     then `M-x matlab-ts-grammar-install'.
   …  …
