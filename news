@@ -1,4 +1,98 @@
-1 Release 8.0.5 Feb-14-2026
+1 Release 8.1.0 Feb-16-2026
+═══════════════════════════
+
+  1. The behavior of TAB and RET in matlab-ts-mode to electric
+     indent/code-format adjacent lines of code.  There is no change in
+     the indent/code-format rules. The goal of this change is to improve
+     editing interactions with the MATLAB indent/code-format engine.
+
+
+  • TAB behavior example. Given
+
+    ┌────
+    │ a = 1;
+    │ foo = 2;
+    │ foobar = 3;
+    └────
+
+    A TAB on any these code lines results in:
+
+    ┌────
+    │ a      = 1;
+    │ foo    = 2;
+    │ foobar = 3;
+    └────
+
+  • RET behavior example. Given
+
+    ┌────
+    │ v1=1;
+    │ var2= [1,1];
+    └────
+
+    Typing the 4 characters, `x=3;', on the 3rd line (without typing
+    RET) gives us:
+
+    ┌────
+    │ v1=1;
+    │ var2= [1,1];
+    │ x=3;
+    └────
+
+    When we type the RET, we get:
+
+    ┌────
+    │ v1   = 1;
+    │ var2 = [1, 1];
+    │ x    = 3;
+    │ 
+    └────
+
+    Now, if we type a RET at the end of the 2nd line, we get the
+    following. Notice that the alignment of x assignment has changed.
+
+    ┌────
+    │ v1   = 1;
+    │ var2 = [1, 1];
+    │ 
+    │ x = 3;
+    │ 
+    └────
+
+  1. An "electric ends" edge case issues in matlab-ts-mode has been
+     fixed. When typing a statement that is terminated by an end,
+     e.g. "if", "function", "classdef", etc. the "end" keyword is
+     automatically added for you. For example, given:
+
+     ┌────
+     │ if a
+     └────
+
+     typing RET at the end of the "if a" line results in:
+
+     ┌────
+     │ if a
+     │ 
+     │ end
+     └────
+
+     where the point is left on the 2nd line, indented to 4 spaces.
+
+     There were some edge cases where an end-statement was being
+     incorrectly inserted. This primarily occurred with continued
+     (ellipsis) conditions following the "if" and similar
+     statements. For example, given the following, typing RET at the end
+     of the first line will not add an end-statement whereas previously
+     we were incorrectly adding and end-statement.
+
+     ┌────
+     │ if a && ...
+     │ 
+     │ end
+     └────
+
+
+2 Release 8.0.5 Feb-14-2026
 ═══════════════════════════
 
   This release fixes a build issue when using matlab-mode with Emacs
@@ -6,7 +100,7 @@
   performed (no behavior changes).
 
 
-2 Release 8.0.4 Feb-7-2026
+3 Release 8.0.4 Feb-7-2026
 ══════════════════════════
 
   This release fixes a minor issue when using matlab-ts-mode with point
@@ -29,7 +123,7 @@
   └────
 
 
-3 Release 8.0.3 Feb-5-2026
+4 Release 8.0.3 Feb-5-2026
 ══════════════════════════
 
   This release updates to the latest tree-sitter-matlab grammar which
@@ -37,7 +131,7 @@
   font-lock.
 
 
-4 Release 8.0.2 Jan-31-2026
+5 Release 8.0.2 Jan-31-2026
 ═══════════════════════════
 
   This release:
@@ -55,7 +149,7 @@
   2. Updates to tree-sitter-matlab grammar from 2026-01-31.
 
 
-5 Release 8.0.1 Jan-30-2026
+6 Release 8.0.1 Jan-30-2026
 ═══════════════════════════
 
   Minor /electric indent/ fix to correct comma placement in struct field
@@ -63,114 +157,9 @@
   attributes.
 
 
-6 Release 8.0.0 Jan-29-2026
+7 Release 8.0.0 Jan-29-2026
 ═══════════════════════════
 
   This release updates matlab-ts-mode indent to /electric indent
   code/. This is sometimes called pretty printing code or formatting
-  code.
-
-  To indent a MATLAB `*.m' file,
-
-  ┌────
-  │ C-x h           or  M-: (mark-whole-buffer)
-  │ C-M-\           or  M-x indent-region
-  └────
-
-
-  See [doc/matlab-code-indent.org - MATLAB Indent (Code Format)]
-
-
-[doc/matlab-code-indent.org - MATLAB Indent (Code Format)]
-<file:doc/matlab-code-indent.org>
-
-
-7 Release 7.4.2 Dec 29, 2025
-════════════════════════════
-
-  Fix bug in tramp (remote) matlab-shell when matlab is installed in a
-  custom location.
-
-
-8 Release 7.4.1 Nov 26, 2025
-════════════════════════════
-
-  1. Fix indent bug. In following typing RET after the argument end
-     statement, the indent now goes to the 4th column and not the 8th
-     column:
-
-     ┌────
-     │ function test(A)
-     │     arguments
-     │         A
-     │     end
-     │ end
-     └────
-
-
-9 Release 7.4.0 Nov 26, 2025
-════════════════════════════
-
-  1. Place the `matlab-*-face' definitions in customize matlab-ts-faces
-     group.
-
-  2. Add `M-x matlab-ts-describe-faces' along with menu item
-
-     ┌────
-     │ MATLAB -> Describe faces
-     └────
-
-
-     that will bring up a help buffer containing the faces used by
-     matlab-ts-mode.  From there you can customize them. This differs
-     from viewing the matlab-ts-faces group in that it contains both
-     matlab-*-faces plus other built-in faces such as
-     font-lock-type-face. This help buffer also contain more information
-     on when the faces are used.
-
-
-10 Release 7.3.4 Nov 25, 2025
-═════════════════════════════
-
-  1. Add the source and build instructions for the
-     libtree-sitter-matlab.SLIB_EXT binaries found in [./matlab-ts-bin]
-     and used by `M-x matlab-ts-grammar-install'.
-
-
-[./matlab-ts-bin] <file:matlab-ts-bin>
-
-
-11 Release 7.3.3 Nov 23, 2025
-═════════════════════════════
-
-  1. Update to latest
-     <https://github.com/acristoffers/tree-sitter-matlab> which improves
-     matlab-ts-mode: matlab-ts-abi14-20251122-90ce9da
-
-
-12 Release 7.3.2 Nov 21, 2025
-═════════════════════════════
-
-  1. Update to latest
-     <https://github.com/acristoffers/tree-sitter-matlab> which improves
-     matlab-ts-mode.  The changes fix parsing errors up through issues
-     141 in matlab tree-sitter.
-
-
-13 Release 7.3.1 Nov 14, 2025
-═════════════════════════════
-
-  1. Fixed M-q (fill-paragraph) in comments when there no space after
-     the '%' character.
-
-  2. Improved t-utils-view-parse-tree
-
-  3. Made matlab-ts-mode show-paren-mode robust to extra `\n' nodes
-
-
-14 Release 7.3.0 Nov 12, 2025
-═════════════════════════════
-
-  1. Updated matlab-ts-mode to work with tree-sitter-matlab commit
-     9d16fcf. This fixes many known issues in matlab-ts-mode.
-  …  …
+  code.  …  …
