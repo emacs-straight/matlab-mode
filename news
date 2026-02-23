@@ -1,4 +1,17 @@
-1 Release 8.1.0 Feb-16-2026
+1 Release 8.1.1 Feb-22-2026
+═══════════════════════════
+
+  1. Enable matlab-ts-mode with Emacs 30.2 which is using tree-sitter
+     ABI 15 (or 14). Note, Emacs 30.1 is using tree-sitter ABI 14 which
+     continues to work.
+
+  2. Update installation instructions for the MATLAB Language Server
+
+  3. Fix mlint.el issue ("Do not permit multiple groups with the same
+     name")
+
+
+2 Release 8.1.0 Feb-16-2026
 ═══════════════════════════
 
   1. The behavior of TAB and RET in matlab-ts-mode to electric
@@ -92,7 +105,7 @@
      └────
 
 
-2 Release 8.0.5 Feb-14-2026
+3 Release 8.0.5 Feb-14-2026
 ═══════════════════════════
 
   This release fixes a build issue when using matlab-mode with Emacs
@@ -100,7 +113,7 @@
   performed (no behavior changes).
 
 
-3 Release 8.0.4 Feb-7-2026
+4 Release 8.0.4 Feb-7-2026
 ══════════════════════════
 
   This release fixes a minor issue when using matlab-ts-mode with point
@@ -123,7 +136,7 @@
   └────
 
 
-4 Release 8.0.3 Feb-5-2026
+5 Release 8.0.3 Feb-5-2026
 ══════════════════════════
 
   This release updates to the latest tree-sitter-matlab grammar which
@@ -131,7 +144,7 @@
   font-lock.
 
 
-5 Release 8.0.2 Jan-31-2026
+6 Release 8.0.2 Jan-31-2026
 ═══════════════════════════
 
   This release:
@@ -147,19 +160,4 @@
      different results on same parse tree.
 
   2. Updates to tree-sitter-matlab grammar from 2026-01-31.
-
-
-6 Release 8.0.1 Jan-30-2026
-═══════════════════════════
-
-  Minor /electric indent/ fix to correct comma placement in struct field
-  alignment and also to fix non-positional name = value arguments and
-  attributes.
-
-
-7 Release 8.0.0 Jan-29-2026
-═══════════════════════════
-
-  This release updates matlab-ts-mode indent to /electric indent
-  code/. This is sometimes called pretty printing code or formatting
-  code.  …  …
+  …  …
