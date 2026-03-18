@@ -1,4 +1,47 @@
-1 Release 8.1.1 Feb-22-2026
+1 Release 8.1.2 Mar-15-2026
+═══════════════════════════
+
+  1. matlab-ts-mode: improved performance of electric indent.
+
+     Previously we were using (treesit-node-at (point)) to obtain the
+     language elements to indent. Now we use treesit-capture-query which
+     is faster.
+
+     This is the first step in speeding up electric indent. Future
+     possible optimizations include using symbols from the
+     treesit-capture for language element identification rather than
+     treesit-node-type, simplification of matrix alignment and the other
+     alignments, additional removal of treesit-node-at, etc.
+
+  2. matlab-ts-mode: fixed trailing comment alignment problems.
+
+     Now we only align consecutive statements when in same scope. For
+     example, first comment below is in a different scope so not aligned
+     with the last two comments:
+
+     ┌────
+     │ fooBarGooToo = [something, ...
+     │                 [otherThing(wIndex) : theEndIndex(wIndex) - 1, ...
+     │                  otherThing(wIndex) + 1 : theEndIndex(wIndex); ...
+     │                  otherThing(wIndex) + 1 : theEndIndex(wIndex), ...
+     │                  otherThing(wIndex) : theEndIndex(wIndex) - 1]]; %#ok<AGROW>
+     │ P0 = [P0, foo.blah{wIndex}.foobarGooOrig(:, 1 : end - 1)]; %#ok<AGROW>
+     │ P1 = [P1, foo.blah{wIndex}.foobarGooOrig(:, 2 : end)];     %#ok<AGROW>
+     └────
+
+  3. matlab-ts-mode: when using keywords (end, arguments, etc.) as
+     variables or functions, they now indent correctly. Note, MATLAB
+     allows end.m, arguments = 10, etc.
+
+  4. matlab-ts-mode: An ellipsis at start of file no longer causes a
+     hang
+
+  5. matlab-shell: add matlab-shell-before-start-hook
+
+  6. matlab-shell: hyperlink syntax error
+
+
+2 Release 8.1.1 Feb-22-2026
 ═══════════════════════════
 
   1. Enable matlab-ts-mode with Emacs 30.2 which is using tree-sitter
@@ -11,7 +54,7 @@
      name")
 
 
-2 Release 8.1.0 Feb-16-2026
+3 Release 8.1.0 Feb-16-2026
 ═══════════════════════════
 
   1. The behavior of TAB and RET in matlab-ts-mode to electric
@@ -95,69 +138,5 @@
      incorrectly inserted. This primarily occurred with continued
      (ellipsis) conditions following the "if" and similar
      statements. For example, given the following, typing RET at the end
-     of the first line will not add an end-statement whereas previously
-     we were incorrectly adding and end-statement.
-
-     ┌────
-     │ if a && ...
-     │ 
-     │ end
-     └────
-
-
-3 Release 8.0.5 Feb-14-2026
-═══════════════════════════
-
-  This release fixes a build issue when using matlab-mode with Emacs
-  that doesn't have tree-sitter. In addition, several lisp cleanups were
-  performed (no behavior changes).
-
-
-4 Release 8.0.4 Feb-7-2026
-══════════════════════════
-
-  This release fixes a minor issue when using matlab-ts-mode with point
-  location when indenting (TAB) a multi-output variable line of the
-  form:
-
-  ┌────
-  │ a([   1, 2], :) = ...
-  │     [  3,   4,   5; ...
-  │      300, 400, 500];
-  └────
-
-  If point is on the `1' and we indent the line (TAB), the point will
-  remain on the `1' and the result will be:
-
-  ┌────
-  │ a([1, 2], :) = ...
-  │     [  3,   4,   5; ...
-  │      300, 400, 500];
-  └────
-
-
-5 Release 8.0.3 Feb-5-2026
-══════════════════════════
-
-  This release updates to the latest tree-sitter-matlab grammar which
-  addresses a couple issues in matlab-ts-mode related to indent and
-  font-lock.
-
-
-6 Release 8.0.2 Jan-31-2026
-═══════════════════════════
-
-  This release:
-
-  1. Improves robustness of matlab-ts-mode electric indent in Emacs 30.1
-     build 1 v.s. build 2.
-
-     Electric indent is now robust to varying behavior from tree-sitter
-     matlab parse tree access.  Two different builds of Emacs 30.1 on
-     Debian 12 are producing different results for the identical parse
-     trees created using the same libtree-sitter-matlab.so. We see cases
-     where treesit-node-next-sibling and treesit-node-parent return
-     different results on same parse tree.
-
-  2. Updates to tree-sitter-matlab grammar from 2026-01-31.
+     of the first line will not add an end-statement
   …  …
