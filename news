@@ -1,4 +1,21 @@
-1 Release 8.1.2 Mar-15-2026
+1 Release 8.2.0 Apr-19-2026
+═══════════════════════════
+
+  1. matlab-ts-mode: structural changes to electric indent for improved
+     performance
+
+     • Numeric matrices are now aligned directly without additional
+       tree-sitter API queries For example, a file with large numeric
+       multi-line matrices (one row per line) went from ~100s to 5s for
+       indent-region on the buffer.
+     • Several optimizations and eliminations of tree-sitter API calls
+     • Many additional small performance improvements that add up.
+     • Added TODO comments in the code for possible future optimizations
+
+  2. whitespace at end of lines is now removed during indent
+
+
+2 Release 8.1.2 Mar-15-2026
 ═══════════════════════════
 
   1. matlab-ts-mode: improved performance of electric indent.
@@ -41,7 +58,7 @@
   6. matlab-shell: hyperlink syntax error
 
 
-2 Release 8.1.1 Feb-22-2026
+3 Release 8.1.1 Feb-22-2026
 ═══════════════════════════
 
   1. Enable matlab-ts-mode with Emacs 30.2 which is using tree-sitter
@@ -54,7 +71,7 @@
      name")
 
 
-3 Release 8.1.0 Feb-16-2026
+4 Release 8.1.0 Feb-16-2026
 ═══════════════════════════
 
   1. The behavior of TAB and RET in matlab-ts-mode to electric
@@ -116,27 +133,5 @@
     └────
 
   1. An "electric ends" edge case issues in matlab-ts-mode has been
-     fixed. When typing a statement that is terminated by an end,
-     e.g. "if", "function", "classdef", etc. the "end" keyword is
-     automatically added for you. For example, given:
-
-     ┌────
-     │ if a
-     └────
-
-     typing RET at the end of the "if a" line results in:
-
-     ┌────
-     │ if a
-     │ 
-     │ end
-     └────
-
-     where the point is left on the 2nd line, indented to 4 spaces.
-
-     There were some edge cases where an end-statement was being
-     incorrectly inserted. This primarily occurred with continued
-     (ellipsis) conditions following the "if" and similar
-     statements. For example, given the following, typing RET at the end
-     of the first line will not add an end-statement
+     fixed. When typing a statement
   …  …
