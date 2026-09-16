@@ -1,4 +1,18 @@
-1 Release 8.2.0 Apr-19-2026
+1 Release 8.2.1 Sep-15-2026
+═══════════════════════════
+
+  Updated to use tree-sitter-matlab grammar to v1.3.1 commit f03d034
+  from <https://github.com/acristoffers/tree-sitter-matlab>
+
+  This address a CRLF (\r\n) issue.  The MATLAB editor on Windows uses
+  CRLF whereas on Unix LF is used.  Fix: treat CRLF as one line ending
+  after a line continuation consume_whitespaces_once stopped right after
+  the carriage return, so in files with CRLF endings the continuation
+  token ended at "…\r" and the lexer then hit a bare newline where the
+  continuation should have swallowed it.
+
+
+2 Release 8.2.0 Apr-19-2026
 ═══════════════════════════
 
   1. matlab-ts-mode: structural changes to electric indent for improved
@@ -15,7 +29,7 @@
   2. whitespace at end of lines is now removed during indent
 
 
-2 Release 8.1.2 Mar-15-2026
+3 Release 8.1.2 Mar-15-2026
 ═══════════════════════════
 
   1. matlab-ts-mode: improved performance of electric indent.
@@ -58,7 +72,7 @@
   6. matlab-shell: hyperlink syntax error
 
 
-3 Release 8.1.1 Feb-22-2026
+4 Release 8.1.1 Feb-22-2026
 ═══════════════════════════
 
   1. Enable matlab-ts-mode with Emacs 30.2 which is using tree-sitter
@@ -71,7 +85,7 @@
      name")
 
 
-4 Release 8.1.0 Feb-16-2026
+5 Release 8.1.0 Feb-16-2026
 ═══════════════════════════
 
   1. The behavior of TAB and RET in matlab-ts-mode to electric
@@ -105,33 +119,4 @@
 
     Typing the 4 characters, `x=3;', on the 3rd line (without typing
     RET) gives us:
-
-    ┌────
-    │ v1=1;
-    │ var2= [1,1];
-    │ x=3;
-    └────
-
-    When we type the RET, we get:
-
-    ┌────
-    │ v1   = 1;
-    │ var2 = [1, 1];
-    │ x    = 3;
-    │ 
-    └────
-
-    Now, if we type a RET at the end of the 2nd line, we get the
-    following. Notice that the alignment of x assignment has changed.
-
-    ┌────
-    │ v1   = 1;
-    │ var2 = [1, 1];
-    │ 
-    │ x = 3;
-    │ 
-    └────
-
-  1. An "electric ends" edge case issues in matlab-ts-mode has been
-     fixed. When typing a statement
   …  …
