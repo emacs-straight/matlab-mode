@@ -1,4 +1,11 @@
-1 Release 8.2.1 Sep-15-2026
+1 Release 8.2.2 Sep-21-2026
+═══════════════════════════
+
+  Update build instructions for the Mac tree-sitter-matlab grammar to
+  leverage @loader_path.
+
+
+2 Release 8.2.1 Sep-15-2026
 ═══════════════════════════
 
   Updated to use tree-sitter-matlab grammar to v1.3.1 commit f03d034
@@ -12,7 +19,7 @@
   continuation should have swallowed it.
 
 
-2 Release 8.2.0 Apr-19-2026
+3 Release 8.2.0 Apr-19-2026
 ═══════════════════════════
 
   1. matlab-ts-mode: structural changes to electric indent for improved
@@ -29,7 +36,7 @@
   2. whitespace at end of lines is now removed during indent
 
 
-3 Release 8.1.2 Mar-15-2026
+4 Release 8.1.2 Mar-15-2026
 ═══════════════════════════
 
   1. matlab-ts-mode: improved performance of electric indent.
@@ -72,7 +79,7 @@
   6. matlab-shell: hyperlink syntax error
 
 
-4 Release 8.1.1 Feb-22-2026
+5 Release 8.1.1 Feb-22-2026
 ═══════════════════════════
 
   1. Enable matlab-ts-mode with Emacs 30.2 which is using tree-sitter
@@ -85,7 +92,7 @@
      name")
 
 
-5 Release 8.1.0 Feb-16-2026
+6 Release 8.1.0 Feb-16-2026
 ═══════════════════════════
 
   1. The behavior of TAB and RET in matlab-ts-mode to electric
@@ -112,11 +119,5 @@
 
   • RET behavior example. Given
 
-    ┌────
-    │ v1=1;
-    │ var2= [1,1];
-    └────
-
-    Typing the 4 characters, `x=3;', on the 3rd line (without typing
-    RET) gives us:
+    #+begin_src matlab v1=1; var2= [1,1];
   …  …
